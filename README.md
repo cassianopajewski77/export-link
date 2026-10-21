@@ -15,13 +15,6 @@ Banco, login e arquivos no **Supabase**; site no **Cloudflare Workers** (arquivo
   - espelha nas tabelas `documentos`, `clientes`, `produtos`, `arquivos` e `configuracoes` o que é gravado.
 - `worker/index.js` (Cloudflare Worker, configurado em `wrangler.jsonc`) serve a pasta `web/` e busca as fotos do site (SKUImagens) em `/api/foto`.
 - `web/index.html` é a tela de login.
-- `web/pedido.html` é a **Hoja de Pedido** pública (em espanhol, sem login) para os clientes: eles buscam os
-  produtos por código, descrição ou foto, informam quantidades e dados da empresa e baixam um PDF. O PDF leva a
-  marca `KZ-PED` e o cabeçalho `CÓDIGO / CANTIDAD`, então o **Importar pedido do cliente** do gerador lê os
-  códigos e quantidades direto. O catálogo vem da função `catalogo_pedido()` (`supabase/05_pedido_cliente.sql`),
-  que só devolve código, descrição, unidade e foto: preços, clientes e documentos continuam fechados.
-  Link com o cliente já preenchido: `pedido.html?cliente=<código>&empresa=<nome>`.
-  A tradução das descrições é a do gerador (`web/pedido_traducao.js`, gerado pelo `montar_gerador.js`).
 
 O PDF automático pelo Excel não existe na versão online: use **PDF / Imprimir > Salvar como PDF**.
 O Excel continua sendo gerado e salvo na pasta do cliente.
@@ -31,7 +24,6 @@ O Excel continua sendo gerado e salvo na pasta do cliente.
 2. `supabase/02_carga_base.sql` – carga da base do PC (`node ferramentas/gerar_carga.js <pasta> <sku.json>` gera de novo)
 3. `supabase/03_liberar_usuarios.sql` – libera os usuários criados em Authentication > Users
 4. `supabase/04_ajustes_app.sql` – ajustes usados pelo app (número do documento, cliente e proforma automáticos)
-5. `supabase/05_pedido_cliente.sql` – catálogo público da Hoja de Pedido (`web/pedido.html`)
 
 ## Publicar no Cloudflare
 O projeto Workers `export-link` está ligado a este repositório: a cada push no `main` o Cloudflare roda
@@ -42,5 +34,4 @@ Configuração no painel: Build command vazio · Deploy command `npx wrangler de
 ```
 node ferramentas/gerar_carga.js "<pasta Gerador de Proforma>" <sku.json> --semente /tmp/semente.json
 SEMENTE=/tmp/semente.json LIBS=<pasta com exceljs/dist> node testes/teste_ponte.js
-CATALOGO=<catalogo.json> LIBS=<pasta com jspdf, jspdf-autotable, pdfjs-dist> node testes/teste_pedido.js
 ```
