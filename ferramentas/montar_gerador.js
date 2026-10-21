@@ -22,3 +22,12 @@ trocar(/\n  banco:\[[\s\S]*?\]\.join\("\\n"\)\};/, '\n  banco:""};', "banco");
 
 fs.writeFileSync(path.join(raiz, "web", "gerador.html"), html);
 console.log("web/gerador.html montado (" + (html.length / 1024).toFixed(0) + " KB)");
+
+// 5) web/pedido_traducao.js: a mesma tradução PT -> ES e unidade sugerida do gerador, para a Hoja de Pedido online
+const linha = re => { const m = html.match(re); if(!m) throw new Error("não achei: " + re); return m[0]; };
+const ini = html.indexOf("/* ---------- tradução"), fim = html.indexOf("/* ---------- estado");
+if(ini < 0 || fim < ini) throw new Error("não achei o bloco de tradução");
+const trad = "// Gerado por ferramentas/montar_gerador.js a partir do gerador (não edite à mão).\n\"use strict\";\n" +
+  [linha(/^const UM_ES = .*$/m), linha(/^const norm = .*$/m), linha(/^const r2 = .*$/m)].join("\n") + "\n" + html.slice(ini, fim);
+fs.writeFileSync(path.join(raiz, "web", "pedido_traducao.js"), trad);
+console.log("web/pedido_traducao.js montado (" + (trad.length / 1024).toFixed(0) + " KB)");
