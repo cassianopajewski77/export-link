@@ -1,7 +1,7 @@
 # Export Link – Export Docs Pro online
 
 Versão online do Gerador de Proforma / Invoice / Packing List da Kapazi.
-Banco, login e arquivos no **Supabase**; site no **Cloudflare Pages**.
+Banco, login e arquivos no **Supabase**; site no **Cloudflare Workers** (arquivos estáticos de `web/`).
 
 ## Como funciona
 - `original/Gerador de Proforma.html` é o mesmo gerador do PC (fonte).
@@ -13,7 +13,7 @@ Banco, login e arquivos no **Supabase**; site no **Cloudflare Pages**.
   - as gravações/leituras de pasta (`/api/info`, `mkdir`, `listar`, `ler`, `salvar`) vão para o
     Storage (bucket `arquivos`) com os mesmos caminhos do PC (`Clientes/<cód - nome>/<nº>/...`);
   - espelha nas tabelas `documentos`, `clientes`, `produtos`, `arquivos` e `configuracoes` o que é gravado.
-- `functions/api/foto.js` (Cloudflare Pages Function) busca as fotos do site (SKUImagens) para o gerador.
+- `worker/index.js` (Cloudflare Worker, configurado em `wrangler.jsonc`) serve a pasta `web/` e busca as fotos do site (SKUImagens) em `/api/foto`.
 - `web/index.html` é a tela de login.
 
 O PDF automático pelo Excel não existe na versão online: use **PDF / Imprimir > Salvar como PDF**.
@@ -25,12 +25,10 @@ O Excel continua sendo gerado e salvo na pasta do cliente.
 3. `supabase/03_liberar_usuarios.sql` – libera os usuários criados em Authentication > Users
 4. `supabase/04_ajustes_app.sql` – ajustes usados pelo app (número do documento, cliente e proforma automáticos)
 
-## Publicar no Cloudflare Pages
-1. Cloudflare > **Workers & Pages** > **Create** > aba **Pages** > **Connect to Git** (Import an existing Git repository).
-2. Escolha o repositório `export-link` > **Begin setup**.
-3. Framework preset: **None** · Build command: *(vazio)* · Build output directory: **web**.
-4. **Save and Deploy**. O endereço fica `https://export-link.pages.dev` (ou parecido).
-5. A cada push no `main` o site é publicado de novo.
+## Publicar no Cloudflare
+O projeto Workers `export-link` está ligado a este repositório: a cada push no `main` o Cloudflare roda
+`npx wrangler deploy` na raiz, que lê o `wrangler.jsonc` (arquivos de `web/` + `worker/index.js`).
+Configuração no painel: Build command vazio · Deploy command `npx wrangler deploy` · Root directory `/`.
 
 ## Teste local (sem internet, com Supabase falso)
 ```

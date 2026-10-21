@@ -1,0 +1,10 @@
+{
+  // Publicação no Cloudflare Workers (deploy: npx wrangler deploy, pasta raiz "/").
+  "name": "export-link",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./web",
+    "binding": "ASSETS"
+  }
+}

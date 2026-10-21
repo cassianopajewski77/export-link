@@ -6,6 +6,8 @@
   Cache-Control: no-cache
 /config.js
   Cache-Control: no-cache
+/gerador
+  Cache-Control: no-cache
 /*
   X-Frame-Options: DENY
   Referrer-Policy: same-origin
