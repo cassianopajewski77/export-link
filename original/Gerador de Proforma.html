@@ -177,6 +177,34 @@ table.items th.fp-prop{background:var(--coral)}
 table.items td.fp-prop{font-weight:700;box-shadow:inset 2px 0 0 var(--coral),inset -2px 0 0 var(--coral)}
 table.items td.fp-cel-est{background:var(--warn)!important}
 .fp-link{color:var(--navy);font-size:12px;cursor:pointer;text-decoration:underline;background:none;border:0;padding:0;font:inherit}
+/* ===== SKIN EXPORT LINK (paleta do site: 60% azul-marinho, 30% verde, 10% laranja só nos botões de ação) =====
+   Só muda a TELA. Proforma, invoice e packing impressos/PDF/Excel continuam com as cores atuais. */
+:root{
+  --navy:#0A2540; --coral:#00875A; --soft:#EEF1F4; --ink:#0A2540; --muted:#4A5D72;
+  --line:#DDE3EA; --verde:#00875A; --verde-esc:#006B47; --bg:#F4F6F8; --card:#fff;
+  --ok:#E3F4EC; --laranja:#FF6B00; --laranja-esc:#E85F00; --navy-2:#12324F; --verde-claro:#E3F4EC;
+}
+body{font-family:"Segoe UI",system-ui,Arial,sans-serif}
+header.top{border-bottom:1px solid #24476A}
+nav.modos{background:var(--navy-2)}
+nav.modos .modo{color:#A9BBCE}
+nav.modos .modo:hover{color:#fff}
+nav.modos .modo.on{color:var(--navy)}
+.btn{border-radius:8px}
+.btn.pri{background:var(--laranja);border-color:var(--laranja);color:var(--navy);font-weight:700}
+.btn.pri:hover{background:var(--laranja-esc);border-color:var(--laranja-esc);filter:none}
+.btn.ghost{border-color:#24476A}
+.btn.ghost:hover{border-color:#A9BBCE}
+.btn.inv-btn:hover{background:var(--verde-claro)}
+.card{border-radius:12px}
+.card h2{color:var(--verde);font-weight:700}
+input:focus,select:focus,textarea:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
+.ac-item.sel,.ac-item:hover{background:var(--verde-claro)}
+.drop.on{border-color:var(--verde);background:var(--verde-claro)}
+.fp-alerta.info{background:#EAF1F7;border-color:#C9D7E4}
+table.items th.fp-prop{background:var(--verde)}
+table.items td.fp-prop{box-shadow:inset 2px 0 0 var(--verde),inset -2px 0 0 var(--verde)}
+.addbar .addimp{border-color:var(--navy);color:var(--navy)}
 </style>
 </head>
 <body>
