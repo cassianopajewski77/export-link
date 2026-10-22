@@ -8,15 +8,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <style>
-:root{--navy:#041243;--coral:#F16A64;--line:#d9dbe2;--muted:#6b7080;--bg:#f5f6f8}
+:root{--navy:#0A2540;--laranja:#FF6B00;--laranja-esc:#E85F00;--line:#DDE3EA;--muted:#4A5D72;--bg:#F4F6F8}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font:15px/1.4 "Segoe UI",Arial,sans-serif;color:#1d2030;padding:16px}
-form{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:360px;box-shadow:0 6px 24px rgba(4,18,67,.08)}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font:15px/1.4 "Segoe UI",Arial,sans-serif;color:#0A2540;padding:16px}
+form{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:360px;box-shadow:0 6px 24px rgba(10,37,64,.08)}
 .logo{display:block;width:96px;margin:0 auto 10px}
 h1{font-size:18px;text-align:center;color:var(--navy);margin:0 0 20px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
 input{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit}
-button{width:100%;margin-top:20px;padding:11px;border:0;border-radius:8px;background:var(--navy);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button{width:100%;margin-top:20px;padding:11px;border:0;border-radius:8px;background:var(--laranja);color:var(--navy);font:inherit;font-weight:700;cursor:pointer}
+button:hover{background:var(--laranja-esc)}
+input:focus{outline:2px solid #9FD9C0;border-color:#00875A}
 button:disabled{opacity:.6}
 #msg{min-height:20px;margin-top:12px;font-size:13px;color:#b3261e;text-align:center}
 </style>
