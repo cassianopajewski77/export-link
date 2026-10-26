@@ -1,7 +1,7 @@
 /* elementos da ponte online (barra do usuário, avisos, janela Arquivos) */
 .ponte-user{display:inline-flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap}
-.ponte-email{font-size:12px;color:#c9cde0;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#ponteAviso{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:1000;background:#041243;color:#fff;padding:10px 16px;border-radius:8px;
+.ponte-email{font-size:12px;color:#A9BBCE;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ponteAviso{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:1000;background:#0A2540;color:#fff;padding:10px 16px;border-radius:8px;
   font:14px/1.4 "Segoe UI",Arial,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:calc(100vw - 32px)}
 #ponteAviso.erro{background:#fde4e2;color:#7a1a14;border:1px solid #f1a19c}
 #ponteAviso button{margin-left:8px}
@@ -12,4 +12,4 @@
 #ponteArquivos .pa-it{padding:7px 16px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;font-size:14px}
 #ponteArquivos .pa-it:hover{background:#eeeff1}
 #ponteArquivos .pa-it small{color:#6b7080}
-#ponteArquivos #paFechar{border:1px solid #d9dbe2;background:#fff;color:#041243;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+#ponteArquivos #paFechar{border:1px solid #d9dbe2;background:#fff;color:#0A2540;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
