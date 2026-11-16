@@ -142,6 +142,8 @@ dialog .db{background:#fff url("exportdocspro-marca-dagua-tela.svg") right 10px 
 #print td.ph{width:80px;height:46px;text-align:center;padding:1px}
 #print td.ph img{max-width:76px;max-height:44px}
 #print tr{page-break-inside:avoid}
+/* tfoot vira grupo comum: o total sai só no fim da tabela (última folha), não repetido em cada página */
+#print tfoot{display:table-row-group}
 #print tfoot td{background:#041243;color:#fff;font-weight:700;font-size:9pt;border-color:#041243}
 #print .obs{margin-top:12px}
 #print .obs b{color:#041243}
