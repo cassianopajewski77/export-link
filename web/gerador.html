@@ -143,6 +143,8 @@ dialog .db{background:#fff url("exportdocspro-marca-dagua-tela.svg") right 10px 
 #print td.ph{width:80px;height:46px;text-align:center;padding:1px}
 #print td.ph img{max-width:76px;max-height:44px}
 #print tr{page-break-inside:avoid}
+/* tfoot vira grupo comum: o total sai só no fim da tabela (última folha), não repetido em cada página */
+#print tfoot{display:table-row-group}
 #print tfoot td{background:#041243;color:#fff;font-weight:700;font-size:9pt;border-color:#041243}
 #print .obs{margin-top:12px}
 #print .obs b{color:#041243}
@@ -292,9 +294,9 @@ table.items td.fp-prop{box-shadow:inset 2px 0 0 var(--verde),inset -2px 0 0 var(
     <div class="tbl-wrap">
       <table class="items">
         <thead><tr>
-          <th>#</th><th>Foto</th><th>Código</th><th style="min-width:260px">Descripción</th><th>NCM</th><th>Unidad</th>
+          <th>#</th><th>Foto</th><th>Código</th><th style="min-width:200px">Descripción</th><th>NCM</th><th>Unidad</th>
           <th title="Quantas unidades da tabela (UM) cabem em 1 unidade da proforma">Fator</th>
-          <th>Preço tabela</th><th>Precio unit. (USD)</th><th>Cantidad</th><th>Total (USD)</th><th></th>
+          <th>Preço tabela</th><th>Precio unit. (USD)</th><th>Cantidad</th><th title="Desconto em % sobre o preço unitário deste item">Desc. %</th><th>Total (USD)</th><th></th>
         </tr></thead>
         <tbody id="tb"></tbody>
         <tfoot id="tf"></tfoot>
@@ -1558,14 +1560,23 @@ function adicionarProduto(p, qtd){
 }
 function fmtNcm(n){ const d = String(n||"").replace(/\D/g,""); return d.length === 8 ? `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6)}` : (n||""); }
 const precoUnit = it => it.precoManual != null ? r2(it.precoManual) : r2((it.precoTab||0) * (Number(it.fator)||0));
-const totalItem = it => r2(precoUnit(it) * (Number(it.qtd)||0));
+/* desconto: % por item (descPct, sobre o preço unitário) e desconto no total da proforma (pf.descTipo "%" ou "USD", pf.descValor) */
+const pctDesc = it => Math.min(100, Math.max(0, Number(it.descPct) || 0));
+const precoLiq = it => r2(precoUnit(it) * (1 - pctDesc(it) / 100));   // preço unitário com o desconto do item
+const totalItem = it => r2(precoLiq(it) * (Number(it.qtd)||0));
+const temDescItem = itens => (itens || []).some(it => pctDesc(it) > 0);
+const subtotalPf = d => r2((d.itens || []).reduce((s,it) => s + totalItem(it), 0));
+function descontoPf(d){ const pf = d.pf || {}, v = Number(pf.descValor) || 0, sub = subtotalPf(d);
+  if(!(v > 0)) return 0; return Math.min(sub, r2(pf.descTipo === "USD" ? v : sub * Math.min(v, 100) / 100)); }
+const totalPf = d => r2(subtotalPf(d) - descontoPf(d));
+const rotDescPf = d => { const pf = d.pf || {}; return pf.descTipo === "USD" ? "DESCUENTO" : `DESCUENTO (${fmtQ(Math.min(Number(pf.descValor) || 0, 100))}%)`; };
 
 /* ---------- tabela de itens ---------- */
 function render(){
   const tb = document.getElementById("tb"), tf = document.getElementById("tf"), inc = state.pf.incoterm;
   document.querySelector("table.items thead th:nth-child(9)").textContent = `Precio unit. ${inc} (USD)`;
-  document.querySelector("table.items thead th:nth-child(11)").textContent = `Total ${inc} (USD)`;
-  if(!state.itens.length){ tb.innerHTML = `<tr><td colspan="12" class="empty">Nenhum item. Busque um produto acima pelo código ou descrição.</td></tr>`; tf.innerHTML = ""; return; }
+  document.querySelector("table.items thead th:nth-child(12)").textContent = `Total ${inc} (USD)`;
+  if(!state.itens.length){ tb.innerHTML = `<tr><td colspan="13" class="empty">Nenhum item. Busque um produto acima pelo código ou descrição.</td></tr>`; tf.innerHTML = ""; return; }
   tb.innerHTML = state.itens.map((it,i) => {
     const f = fotoItem(it), manual = it.precoManual != null;
     return `<tr class="${manual || it.precoTab == null ? "est" : ""}">
@@ -1579,17 +1590,26 @@ function render(){
       <td class="num" style="white-space:nowrap">${it.precoTab != null ? fmt(it.precoTab,4) + `<div class="ref">/${esc(it.umTab)}</div>` : '<span class="ref">—</span>'}</td>
       <td><input class="num" type="number" step="0.01" value="${precoUnit(it).toFixed(2)}" style="width:92px" onchange="editar(${i},'preco',this.value)">${manual && it.precoTab != null ? `<div class="ref"><a href="#" onclick="editar(${i},'preco',null);return false">voltar ao da tabela</a></div>` : ""}</td>
       <td><input class="num" type="number" step="any" min="0" value="${it.qtd}" style="width:78px" onchange="editar(${i},'qtd',this.value)"></td>
-      <td class="tot">${fmt(totalItem(it))}</td>
+      <td><input class="num" type="number" step="any" min="0" max="100" value="${pctDesc(it) || ""}" placeholder="0" style="width:54px" onchange="editar(${i},'descPct',this.value)"></td>
+      <td class="tot">${fmt(totalItem(it))}${pctDesc(it) ? `<div class="ref" title="Preço unitário com o desconto do item">un. ${fmt(precoLiq(it))}</div>` : ""}</td>
       <td><button class="xbtn" title="Remover" onclick="remover(${i})">✕</button></td>
     </tr>`;}).join("");
-  const tq = state.itens.reduce((s,it)=>s+(Number(it.qtd)||0),0), tv = state.itens.reduce((s,it)=>s+totalItem(it),0);
-  tf.innerHTML = `<tr><td colspan="9" style="text-align:right">TOTAL ${esc(inc)} (USD)</td><td class="num">${fmtQ(tq)}</td><td class="num" style="white-space:nowrap">US$ ${fmt(tv)}</td><td></td></tr>`;
+  const tq = state.itens.reduce((s,it)=>s+(Number(it.qtd)||0),0), sub = subtotalPf(state), dsc = descontoPf(state), pf = state.pf;
+  const cxD = "background:#fff;color:var(--ink);padding:3px 5px;font-size:13px;border-radius:4px;border:0";
+  tf.innerHTML = (dsc ? `<tr><td colspan="11" style="text-align:right">SUBTOTAL ${esc(inc)} (USD)</td><td class="num" style="white-space:nowrap">US$ ${fmt(sub)}</td><td></td></tr>` : "") +
+    `<tr><td colspan="11" style="text-align:right;font-weight:600">Desconto no total
+      <select style="${cxD};width:auto" onchange="editarDescPf('descTipo',this.value)"><option value="%"${pf.descTipo !== "USD" ? " selected" : ""}>%</option><option value="USD"${pf.descTipo === "USD" ? " selected" : ""}>US$</option></select>
+      <input type="number" step="any" min="0" value="${Number(pf.descValor) || ""}" placeholder="0" style="${cxD};width:90px;text-align:right" onchange="editarDescPf('descValor',this.value)"></td>
+      <td class="num" style="white-space:nowrap">${dsc ? "− US$ " + fmt(dsc) : "—"}</td><td></td></tr>` +
+    `<tr><td colspan="9" style="text-align:right">TOTAL ${esc(inc)} (USD)</td><td class="num">${fmtQ(tq)}</td><td></td><td class="num" style="white-space:nowrap">US$ ${fmt(totalPf(state))}</td><td></td></tr>`;
 }
+function editarDescPf(campo, v){ state.pf[campo] = campo === "descValor" ? Math.max(0, parseFloat(v) || 0) : v; render(); rascunho(); }
 function editar(i, campo, v){
   const it = state.itens[i];
   if(campo === "preco"){ it.precoManual = v === null ? null : (parseFloat(v) || 0); if(v !== null && it.precoTab != null && r2(it.precoTab*it.fator) === r2(it.precoManual)) it.precoManual = null; }
   else if(campo === "fator"){ it.fator = parseFloat(v) || 0; it.baseFator = ""; }
   else if(campo === "qtd"){ it.qtd = parseFloat(v) || 0; }
+  else if(campo === "descPct"){ it.descPct = Math.min(100, Math.max(0, parseFloat(v) || 0)); }
   else it[campo] = v;
   render(); rascunho();
 }
@@ -1772,7 +1792,7 @@ function desenharSalvas(){
   });
   document.getElementById("pfInfo").innerHTML = `<span>${q ? `${pfFiltradas.length} de ${todas.length}` : todas.length} proforma(s)${q ? " encontrada(s)" : ""} · Enter abre a primeira da lista.</span>` +
     (pastasLidas ? `<span>Pastas dos clientes incluídas.</span>` : `<button class="btn sm" onclick="incluirPastas()">Incluir proformas das pastas dos clientes</button>`);
-  const tot = d => (d.itens || []).reduce((s, it) => s + totalItem(it), 0);
+  const tot = d => totalPf(d);
   document.getElementById("savedList").innerHTML = pfFiltradas.length ? pfFiltradas.slice(0, 200).map((p, i) => {
     const d = p.dados, k = esc(p.numero).replace(/'/g, "\\'");
     return `<div class="saved-row"><div><b>${hl(p.numero, q)}</b> – ${hl((d.cliente && d.cliente.empresa) || "(sem cliente)", q)}
@@ -1854,7 +1874,8 @@ function imprimir(){
   if(!validar()) return;
   const c = state.cliente, pf = state.pf, inc = pf.incoterm;
   const kv = (k,v) => `<b>${k}</b><span>${esc(v)}</span>`;
-  const tv = state.itens.reduce((s,it)=>s+totalItem(it),0), tq = state.itens.reduce((s,it)=>s+(Number(it.qtd)||0),0);
+  const tq = state.itens.reduce((s,it)=>s+(Number(it.qtd)||0),0), hd = temDescItem(state.itens), dsc = descontoPf(state), nc = hd ? 10 : 9;
+  const linTot = (rot, v) => `<tr><td colspan="${nc - 1}" style="text-align:right">${rot}</td><td class="r">${v}</td></tr>`;
   document.getElementById("print").innerHTML = `
     <div class="band"><img src="${LOGO}"><span>FACTURA PROFORMA</span></div>
     <div class="parties">
@@ -1865,9 +1886,9 @@ function imprimir(){
       <div class="kv">${kv("Proforma Nº:",pf.numero)}${kv("Incoterm:",inc)}${kv("Lugar de embarque:",pf.embarque)}${kv("Plazo de entrega:",pf.plazo)}${kv("Transporte:",pf.modal)}</div>
       <div class="kv">${kv("Fecha:",dataBR(pf.fecha))}${kv("Moneda:",pf.moneda)}${kv("Condición de pago:",pf.pago)}${kv("Validez de la oferta:",pf.validez)}${kv("Lugar de destino:",pf.destino)}</div>
     </div>
-    <table><thead><tr><th>ÍTEM</th><th>FOTO</th><th>CÓDIGO</th><th>DESCRIPCIÓN</th><th>NCM</th><th>UNIDAD</th><th>CANTIDAD</th><th>PRECIO UNIT.<br>${esc(inc)} (USD)</th><th>TOTAL<br>${esc(inc)} (USD)</th></tr></thead>
-    <tbody>${state.itens.map((it,i)=>{ const f=fotoItem(it); return `<tr><td class="c">${i+1}</td><td class="ph">${f?`<img src="${f}">`:""}</td><td class="c">${esc(it.cod)}</td><td>${esc(it.desc)}</td><td class="c">${esc(it.ncm)}</td><td class="c">${esc(it.unidade)}</td><td class="c">${fmtQ(it.qtd)}</td><td class="r">${fmt(precoUnit(it))}</td><td class="r">${fmt(totalItem(it))}</td></tr>`; }).join("")}</tbody>
-    <tfoot><tr><td colspan="6" style="text-align:right">TOTAL ${esc(inc)} (USD)</td><td class="c">${fmtQ(tq)}</td><td></td><td class="r">US$ ${fmt(tv)}</td></tr></tfoot></table>
+    <table><thead><tr><th>ÍTEM</th><th>FOTO</th><th>CÓDIGO</th><th>DESCRIPCIÓN</th><th>NCM</th><th>UNIDAD</th><th>CANTIDAD</th><th>PRECIO UNIT.<br>${esc(inc)} (USD)</th>${hd ? "<th>DESC.</th>" : ""}<th>TOTAL<br>${esc(inc)} (USD)</th></tr></thead>
+    <tbody>${state.itens.map((it,i)=>{ const f=fotoItem(it); return `<tr><td class="c">${i+1}</td><td class="ph">${f?`<img src="${f}">`:""}</td><td class="c">${esc(it.cod)}</td><td>${esc(it.desc)}</td><td class="c">${esc(it.ncm)}</td><td class="c">${esc(it.unidade)}</td><td class="c">${fmtQ(it.qtd)}</td><td class="r">${fmt(precoUnit(it))}</td>${hd ? `<td class="c">${pctDesc(it) ? fmtQ(pctDesc(it)) + "%" : ""}</td>` : ""}<td class="r">${fmt(totalItem(it))}</td></tr>`; }).join("")}</tbody>
+    <tfoot>${dsc ? linTot(`SUBTOTAL ${esc(inc)} (USD)`, "US$ " + fmt(subtotalPf(state))) + linTot(rotDescPf(state), "− US$ " + fmt(dsc)) : ""}<tr><td colspan="6" style="text-align:right">TOTAL ${esc(inc)} (USD)</td><td class="c">${fmtQ(tq)}</td><td colspan="${nc - 8}"></td><td class="r">US$ ${fmt(totalPf(state))}</td></tr></tfoot></table>
     <div class="caixas" style="--cx:2fr 3fr">${caixaHtml("OBSERVACIONES:", state.obs)}${bancoHtml()}</div>
     <div class="assin">${ACEITE_HTML}<div class="sign"><div>${esc(cfg.assinatura)}</div></div></div>`;
   imprimirA4(false);
@@ -1973,15 +1994,17 @@ async function planilhaProforma(wb, st){
   const c = st.cliente, pf = st.pf, inc = pf.incoterm, NAVY = "FF041243", CORAL = "FFF16A64", SOFT = "FFEEEFF1";
   const ws = wb.addWorksheet("Proforma", {pageSetup:{paperSize:9, orientation:"portrait", fitToPage:true, fitToWidth:1, fitToHeight:0, margins:{left:.3,right:.3,top:.4,bottom:.4,header:.2,footer:.2}}});
   const cf = wb.addWorksheet("Conferência (interno)", {state:"hidden"});
-  ws.columns = [5.22,19.22,14.22,51.22,11.22,8.22,9.22,13.22,15.22].map(w => ({width:w+0.7}));
+  // com desconto por item entra a coluna I "DESC." e o total passa para J (a descrição fica mais estreita para manter a largura da folha)
+  const hd = temDescItem(st.itens), NC = hd ? 10 : 9, LC = hd ? "J" : "I";
+  ws.columns = (hd ? [5.22,19.22,14.22,43.22,11.22,8.22,9.22,13.22,8.22,15.22] : [5.22,19.22,14.22,51.22,11.22,8.22,9.22,13.22,15.22]).map(w => ({width:w+0.7}));
   const font = (o={}) => ({name:"Arial", size:9, ...o});
   const fill = argb => ({type:"pattern", pattern:"solid", fgColor:{argb}});
   const thin = {style:"thin", color:{argb:"FFC8CAD2"}}, borda = {top:thin, left:thin, bottom:thin, right:thin};
   const put = (addr, v, st={}) => { const cell = ws.getCell(addr); cell.value = v; Object.assign(cell, st); return cell; };
 
   // faixa do título
-  faixaXls(wb, ws, 9);
-  ws.mergeCells("E1:I1");
+  faixaXls(wb, ws, NC);
+  ws.mergeCells(`E1:${LC}1`);
   put("E1", "FACTURA PROFORMA", {font:font({size:20, bold:true, color:{argb:"FFFFFFFF"}}), alignment:{horizontal:"right", vertical:"middle", indent:1}});
 
   // exportador / importador
@@ -1989,7 +2012,7 @@ async function planilhaProforma(wb, st){
   put("E3","IMPORTADOR",{font:font({size:10,bold:true,color:{argb:CORAL}})});
   // exportador: rótulo A:B, valor C:D · importador: rótulo E:F, valor G:I
   const par = (row, l1, v1, l2, v2) => {
-    ws.mergeCells(`A${row}:B${row}`); ws.mergeCells(`C${row}:D${row}`); ws.mergeCells(`E${row}:F${row}`); ws.mergeCells(`G${row}:I${row}`);
+    ws.mergeCells(`A${row}:B${row}`); ws.mergeCells(`C${row}:D${row}`); ws.mergeCells(`E${row}:F${row}`); ws.mergeCells(`G${row}:${LC}${row}`);
     put(`A${row}`, l1, {font:font({bold:true}), alignment:{vertical:"middle"}}); put(`E${row}`, l2, {font:font({bold:true}), alignment:{vertical:"middle"}});
     put(`C${row}`, v1 || "", {font:font(), fill:fill(SOFT), alignment:{vertical:"middle", wrapText:true}});
     put(`G${row}`, v2 || "", {font:font(), fill:fill(SOFT), alignment:{vertical:"middle", wrapText:true}});
@@ -2009,7 +2032,7 @@ async function planilhaProforma(wb, st){
 
   // cabeçalho dos itens
   const H = 16;
-  ["ÍTEM","FOTO","CÓDIGO","DESCRIPCIÓN","NCM","UNIDAD","CANTIDAD",`PRECIO UNIT.\n${inc} (USD)`,`TOTAL\n${inc} (USD)`].forEach((t,i) => {
+  ["ÍTEM","FOTO","CÓDIGO","DESCRIPCIÓN","NCM","UNIDAD","CANTIDAD",`PRECIO UNIT.\n${inc} (USD)`].concat(hd ? ["DESC."] : [], [`TOTAL\n${inc} (USD)`]).forEach((t,i) => {
     const cell = ws.getRow(H).getCell(i+1); cell.value = t;
     cell.font = font({bold:true, color:{argb:"FFFFFFFF"}}); cell.fill = fill(NAVY); cell.border = borda;
     cell.alignment = {horizontal:"center", vertical:"middle", wrapText:true};
@@ -2037,11 +2060,12 @@ async function planilhaProforma(wb, st){
 
     const row = ws.getRow(r);
     const vals = [i+1, "", it.cod, it.desc, it.ncm, it.unidade, Number(it.qtd)||0,
-      {formula:`'Conferência (interno)'!H${cr}`, result:pu}, {formula:`G${r}*H${r}`, result:totalItem(it)}];
+      {formula:`'Conferência (interno)'!H${cr}`, result:pu}].concat(hd ? [pctDesc(it) / 100, {formula:`ROUND(ROUND(H${r}*(1-I${r}),2)*G${r},2)`, result:totalItem(it)}] : [{formula:`G${r}*H${r}`, result:totalItem(it)}]);
     vals.forEach((v,k) => { const cell = row.getCell(k+1); cell.value = v; cell.font = font(); cell.border = borda;
       cell.alignment = {vertical:"middle", horizontal: k===3 ? "left" : "center", wrapText: k===3}; });
-    row.getCell(8).numFmt = "#,##0.00"; row.getCell(9).numFmt = "#,##0.00"; row.getCell(7).numFmt = qtdFmt(it.qtd);
-    row.getCell(8).alignment = row.getCell(9).alignment = {vertical:"middle", horizontal:"right"};
+    row.getCell(8).numFmt = "#,##0.00"; row.getCell(NC).numFmt = "#,##0.00"; row.getCell(7).numFmt = qtdFmt(it.qtd);
+    row.getCell(8).alignment = row.getCell(NC).alignment = {vertical:"middle", horizontal:"right"};
+    if(hd){ row.getCell(9).numFmt = '0.##%;;""'; row.getCell(9).alignment = {vertical:"middle", horizontal:"center"}; }
     const src = fotoItem(it), d = dims[i];
     row.height = src && d ? 60 : 22;  // folga: o Excel pode reduzir a altura em telas com escala
     if(src && d){
@@ -2056,20 +2080,35 @@ async function planilhaProforma(wb, st){
   cf.addRow([`Fonte dos preços: tabela de preço (coluna "PREÇO FCL"), dados de ${D.atualizado || "-"}. Linhas em amarelo = preço manual ou item fora da tabela — confirmar antes de enviar.`]).getCell(1).font = font({italic:true});
 
   // linhas em branco até completar a folha, total, quadros e assinaturas
-  const rod = rodapeXls(ws, [{c1:1, c2:3, titulo:"OBSERVACIONES:", linhas: linhasTexto(st.obs), tam:9}].concat(bancoLinhas().length ? [{c1:4, c2:9, titulo:BANCO_TITULO, linhas: bancoLinhas(), tam:8}] : []),
-    {c1:6, c2:9, texto: cfg.assinatura, aceite:[1, 4]});
-  const n = st.itens.length, ini = H + 1, fim = H + n, T = linhasEmBrancoXls(ws, H + 1 + n, 9, 22, 20 + rod.altura, false);
+  const rod = rodapeXls(ws, [{c1:1, c2:3, titulo:"OBSERVACIONES:", linhas: linhasTexto(st.obs), tam:9}].concat(bancoLinhas().length ? [{c1:4, c2:NC, titulo:BANCO_TITULO, linhas: bancoLinhas(), tam:8}] : []),
+    {c1:6, c2:NC, texto: cfg.assinatura, aceite:[1, 4]});
+  // desconto no total: linhas SUBTOTAL e DESCUENTO antes do TOTAL
+  const dsc = descontoPf(st), nT = dsc ? 3 : 1;
+  const n = st.itens.length, ini = H + 1, fim = H + n, T0 = linhasEmBrancoXls(ws, H + 1 + n, NC, 22, 20 * nT + rod.altura, false), T = T0 + nT - 1;
+  const linhaTot = (r, rot, valor, cor) => {
+    ws.mergeCells(`A${r}:${hd ? "I" : "H"}${r}`);
+    for(let col=1; col<=NC; col++){ const cell = ws.getRow(r).getCell(col); cell.fill = fill(cor === "navy" ? NAVY : SOFT); cell.font = font({size:10, bold:true, color:{argb: cor === "navy" ? "FFFFFFFF" : NAVY}}); cell.border = borda; }
+    put(`A${r}`, rot).alignment = {horizontal:"right", vertical:"middle"};
+    Object.assign(ws.getCell(`${LC}${r}`), {value: valor, numFmt:'"US$ "#,##0.00;"− US$ "#,##0.00', alignment:{horizontal:"center", vertical:"middle"}});
+    ws.getRow(r).height = 20;
+  };
+  const sub = subtotalPf(st), somaItens = n ? {formula:`SUM(${LC}${ini}:${LC}${fim})`, result:sub} : 0;
+  if(dsc){
+    linhaTot(T0, `SUBTOTAL ${inc} (USD)`, somaItens, "soft");
+    linhaTot(T0 + 1, rotDescPf(st), st.pf.descTipo === "USD" ? -dsc : {formula:`-MIN(${LC}${T0},ROUND(${LC}${T0}*${Math.min(Number(st.pf.descValor) || 0, 100) / 100},2))`, result:-dsc}, "soft");
+  }
+  // linha TOTAL: rótulo A:F, quantidade em G, total na última coluna
+  for(let col=1; col<=NC; col++){ const cell = ws.getRow(T).getCell(col); cell.fill = fill(NAVY); cell.font = font({size:10, bold:true, color:{argb:"FFFFFFFF"}}); cell.border = borda; }
   ws.mergeCells(`A${T}:F${T}`);
-  for(let col=1; col<=9; col++){ const cell = ws.getRow(T).getCell(col); cell.fill = fill(NAVY); cell.font = font({size:10, bold:true, color:{argb:"FFFFFFFF"}}); cell.border = borda; }
   put(`A${T}`, `TOTAL ${inc} (USD)`).alignment = {horizontal:"right", vertical:"middle"};
-  const tq = st.itens.reduce((s,it)=>s+(Number(it.qtd)||0),0), tv = r2(st.itens.reduce((s,it)=>s+totalItem(it),0));
+  const tq = st.itens.reduce((s,it)=>s+(Number(it.qtd)||0),0), tv = totalPf(st);
   Object.assign(ws.getCell(`G${T}`), {value: n ? {formula:`SUM(G${ini}:G${fim})`, result:tq} : 0, numFmt:qtdFmt(tq), alignment:{horizontal:"center", vertical:"middle"}});
-  Object.assign(ws.getCell(`I${T}`), {value: n ? {formula:`SUM(I${ini}:I${fim})`, result:tv} : 0, numFmt:'"US$ "#,##0.00', alignment:{horizontal:"center", vertical:"middle"}});
+  Object.assign(ws.getCell(`${LC}${T}`), {value: dsc ? {formula:`${LC}${T0}+${LC}${T0 + 1}`, result:tv} : somaItens, numFmt:'"US$ "#,##0.00', alignment:{horizontal:"center", vertical:"middle"}});
   ws.getRow(T).height = 20;
 
   // observações + dados bancários, aceite do cliente e assinatura
   const o = rod.desenhar(T + 1);
-  ws.pageSetup.printArea = `A1:I${o}`;
+  ws.pageSetup.printArea = `A1:${LC}${o}`;
 }
 
 /* =====================================================================
@@ -2115,7 +2154,7 @@ function desenharInvPf(){
   invPfFiltradas = todas.filter(p => { const alvo = norm([p.numero, p.numero.replace(/\//g, "-"), p.dados.cliente && p.dados.cliente.empresa, p.dados.cliente && p.dados.cliente.cod].join(" ")); return qs.every(w => alvo.includes(w)); })
     .sort((a, b) => { const ma = a.numero.match(RE_NUM), mb = b.numero.match(RE_NUM); if(ma && mb) return (mb[3] + mb[2].padStart(6, "0")).localeCompare(ma[3] + ma[2].padStart(6, "0")); return b.numero.localeCompare(a.numero); });
   document.getElementById("invPfInfo").innerHTML = `<span>${invPfFiltradas.length} proforma(s) · Enter escolhe a primeira.</span>` + (pastasLidas ? "" : `<button class="btn sm" onclick="incluirPastas().then(desenharInvPf)">Incluir proformas das pastas dos clientes</button>`);
-  const tot = d => (d.itens || []).reduce((s, it) => s + totalItem(it), 0);
+  const tot = d => totalPf(d);
   document.getElementById("invPfList").innerHTML = invPfFiltradas.length ? invPfFiltradas.slice(0, 200).map((p, i) => { const d = p.dados, k = esc(p.numero).replace(/'/g, "\\'"), exI = invoiceExistente(p.numero), exP = packingExistente(p.numero);
     const ex = alvoGer === "pack" ? exP : exI, doc = alvoGer === "pack" ? "packing list" : "invoice";
     return `<div class="saved-row"><div><b>${hl(p.numero, q)}</b> – ${hl((d.cliente && d.cliente.empresa) || "(sem cliente)", q)}
@@ -2143,8 +2182,8 @@ function invoiceDaProforma(d){
     exp: {empresa: cfg.empresa, direccion: cfg.direccion, cnpj: cfg.cnpj, contacto: cfg.contacto, emailtel: cfg.emailtel},
     imp: {cod: c.cod || "", empresa: c.empresa || "", direccion: c.direccion || "", doc: c.doc || "", docLabel: c.docLabel || "RUC", contacto: c.contacto || "", emailtel: c.emailtel || ""},
     origen: "Brasil", transporte: pf.modal || "Marítimo", embarque: pf.embarque || "", destino: pf.destino || "", fechaEmbarque: "", docTransporte: "", contenedor: "",
-    itens: (d.itens || []).map(it => ({cod: it.cod, desc: it.desc, ncm: it.ncm, unidade: it.unidade, qtd: Number(it.qtd) || 0, preco: precoUnit(it)})),
-    flete: "", seguro: "", otros: "", bultos: "", pesoNeto: "", pesoBruto: "", volumen: "", obs: OBS_INV, assinatura: cfg.assinatura, criada: new Date().toISOString()};
+    itens: (d.itens || []).map(it => ({cod: it.cod, desc: it.desc, ncm: it.ncm, unidade: it.unidade, qtd: Number(it.qtd) || 0, preco: precoLiq(it)})),
+    flete: "", seguro: "", otros: descontoPf(d) ? -descontoPf(d) : "", bultos: "", pesoNeto: "", pesoBruto: "", volumen: "", obs: OBS_INV, assinatura: cfg.assinatura, criada: new Date().toISOString()};
 }
 // ---- edição ----
 const getI = k => k.split(".").reduce((o, p) => o?.[p], inv);
