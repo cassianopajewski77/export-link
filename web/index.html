@@ -21,29 +21,89 @@ button:hover{background:var(--laranja-esc)}
 input:focus{outline:2px solid #9FD9C0;border-color:#00875A}
 button:disabled{opacity:.6}
 #msg{min-height:20px;margin-top:12px;font-size:13px;color:#b3261e;text-align:center}
+#msg.ok{color:#00875A}
+.links{display:flex;justify-content:space-between;gap:8px;margin-top:14px;font-size:13px}
+.links a{color:#4A5D72;cursor:pointer;text-decoration:underline}
+.links a[hidden]{display:none}
+.sub{font-size:13px;color:#4A5D72;text-align:center;margin:-12px 0 8px}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <form id="f">
   <img class="logo" src="logo/exportdocspro-256.png" alt="Export Docs Pro">
   <h1>Export Docs Pro</h1>
-  <label for="email">E-mail</label>
-  <input id="email" type="email" autocomplete="username" required>
-  <label for="senha">Senha</label>
-  <input id="senha" type="password" autocomplete="current-password" required>
+  <p class="sub" id="sub"></p>
+  <div id="cEmail"><label for="email">E-mail</label>
+  <input id="email" type="email" autocomplete="username" required></div>
+  <div id="cSenha"><label for="senha">Senha</label>
+  <input id="senha" type="password" autocomplete="current-password" required></div>
+  <div id="cSenha2" hidden><label for="senha2">Repita a senha</label>
+  <input id="senha2" type="password" autocomplete="new-password"></div>
   <button id="btn">Entrar</button>
   <div id="msg"></div>
+  <div class="links"><a id="lPrimeiro">Primeiro acesso</a><a id="lEsqueci">Esqueci a senha</a><a id="lVoltar" hidden>Voltar para entrar</a></div>
 </form>
 <script>
 const sb = supabase.createClient(EXPORT_LINK_CFG.url, EXPORT_LINK_CFG.key);
-sb.auth.getSession().then(({data}) => { if(data && data.session) location.replace("gerador.html"); });
-document.getElementById("f").addEventListener("submit", async ev => {
+const $ = id => document.getElementById(id), voltaAqui = location.origin + location.pathname;
+// modos: entrar · primeiro (cria a senha de um e-mail já incluído pelo administrador) · esqueci · nova (link do e-mail de recuperação)
+const MODOS = {
+  entrar:   {sub:"", btn:"Entrar", senha:true, senha2:false, email:true},
+  primeiro: {sub:"Use o e-mail que o administrador da sua empresa cadastrou e crie a sua senha (mínimo 8 caracteres).", btn:"Criar senha", senha:true, senha2:true, email:true},
+  esqueci:  {sub:"Enviaremos um link para você criar uma senha nova.", btn:"Enviar link", senha:false, senha2:false, email:true},
+  nova:     {sub:"Digite a sua senha nova (mínimo 8 caracteres).", btn:"Salvar senha", senha:true, senha2:true, email:false}
+};
+let modo = "entrar";
+function mudar(m){
+  modo = m; const c = MODOS[m];
+  $("sub").textContent = c.sub; $("sub").hidden = !c.sub; $("btn").textContent = c.btn;
+  $("cEmail").hidden = !c.email; $("email").required = c.email;
+  $("cSenha").hidden = !c.senha; $("senha").required = c.senha; $("senha").autocomplete = m === "entrar" ? "current-password" : "new-password";
+  $("cSenha2").hidden = !c.senha2; $("senha2").required = c.senha2;
+  $("lPrimeiro").hidden = m !== "entrar"; $("lEsqueci").hidden = m !== "entrar"; $("lVoltar").hidden = m === "entrar" || m === "nova";
+  msg("");
+}
+function msg(t, ok){ $("msg").textContent = t; $("msg").className = ok ? "ok" : ""; }
+$("lPrimeiro").onclick = () => mudar("primeiro");
+$("lEsqueci").onclick = () => mudar("esqueci");
+$("lVoltar").onclick = () => mudar("entrar");
+
+const recuperando = /type=recovery/.test(location.hash);
+sb.auth.onAuthStateChange(ev => { if(ev === "PASSWORD_RECOVERY") mudar("nova"); });
+if(recuperando) mudar("nova");
+else sb.auth.getSession().then(({data}) => { if(data && data.session && modo === "entrar") location.replace("gerador.html"); });
+
+$("f").addEventListener("submit", async ev => {
   ev.preventDefault();
-  const btn = document.getElementById("btn"), msg = document.getElementById("msg");
-  btn.disabled = true; msg.textContent = "";
-  const {error} = await sb.auth.signInWithPassword({email: document.getElementById("email").value.trim(), password: document.getElementById("senha").value});
-  if(error){ msg.textContent = /invalid/i.test(error.message) ? "E-mail ou senha incorretos." : "Não foi possível entrar: " + error.message; btn.disabled = false; return; }
-  location.replace("gerador.html");
+  const btn = $("btn"), email = $("email").value.trim().toLowerCase(), senha = $("senha").value;
+  if(MODOS[modo].senha2 && senha.length < 8) return msg("A senha precisa ter pelo menos 8 caracteres.");
+  if(MODOS[modo].senha2 && senha !== $("senha2").value) return msg("As duas senhas não são iguais.");
+  btn.disabled = true; msg("");
+  try{
+    if(modo === "entrar"){
+      const {error} = await sb.auth.signInWithPassword({email, password: senha});
+      if(error) throw new Error(/invalid/i.test(error.message) ? "E-mail ou senha incorretos." : /confirm/i.test(error.message) ? "Confirme o seu e-mail pelo link que enviamos antes de entrar." : "Não foi possível entrar: " + error.message);
+      location.replace("gerador.html"); return;
+    }
+    if(modo === "primeiro"){
+      const {data, error} = await sb.auth.signUp({email, password: senha, options: {emailRedirectTo: voltaAqui}});
+      if(error) throw new Error(/registered|exists/i.test(error.message) ? "Este e-mail já tem senha. Use Entrar ou Esqueci a senha." : "Não foi possível criar a senha: " + error.message);
+      if(data && data.session){ location.replace("gerador.html"); return; }
+      mudar("entrar"); msg("Pronto! Enviamos um e-mail de confirmação para " + email + ". Clique no link do e-mail e depois entre aqui.", true);
+    }
+    if(modo === "esqueci"){
+      const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: voltaAqui});
+      if(error) throw new Error("Não foi possível enviar: " + error.message);
+      mudar("entrar"); msg("Se o e-mail estiver cadastrado, você vai receber um link para criar a senha nova.", true);
+    }
+    if(modo === "nova"){
+      const {error} = await sb.auth.updateUser({password: senha});
+      if(error) throw new Error("Não foi possível salvar a senha: " + error.message);
+      history.replaceState(null, "", voltaAqui); location.replace("gerador.html"); return;
+    }
+  }catch(e){ msg(e.message); }
+  btn.disabled = false;
 });
 </script>
 </body>

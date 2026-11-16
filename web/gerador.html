@@ -4,13 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gerador de Proforma</title>
-<script src="logo.js"></script>
-<script src="fotos.js"></script>
-<script src="fotos_catalogo.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="ponte.js"></script>
+<script src="empresa.js"></script>
 <link rel="stylesheet" href="ponte.css">
 <link rel="icon" href="logo/exportdocspro.ico">
 <style>
@@ -214,7 +212,7 @@ table.items td.fp-prop{box-shadow:inset 2px 0 0 var(--verde),inset -2px 0 0 var(
 <div class="marca-dagua" aria-hidden="true"></div>
 <header class="top">
   <img class="logo-ed" src="logo/exportdocspro-256.png" alt="Export Docs Pro" title="Export Docs Pro – Gerador de Proforma, Invoice e Packing List">
-  <h1 class="marca-app"><img id="logoTop" alt="KAPAZI"></h1>
+  <h1 class="marca-app"><img id="logoTop" alt="Logo do exportador"></h1>
   <span class="upd" id="upd"></span>
   <button class="btn ghost so-pf" onclick="novaProforma()">Nova</button>
   <button class="btn ghost so-pf" onclick="limparTudo()" title="Apaga cliente, dados da proforma e itens preenchidos">Limpar</button>
@@ -262,7 +260,7 @@ table.items td.fp-prop{box-shadow:inset 2px 0 0 var(--verde),inset -2px 0 0 var(
   <section class="card">
     <h2>Dados da proforma</h2>
     <div class="grid">
-      <div><label>Proforma Nº</label><input data-k="pf.numero" placeholder="Gerado ao escolher o cliente" title="Automático: KZ + iniciais do importador + sequencial/ano. Se digitar outro número, ele passa a ser manual (apague para voltar ao automático)."></div>
+      <div><label>Proforma Nº</label><input data-k="pf.numero" placeholder="Gerado ao escolher o cliente" title="Automático: prefixo do exportador + iniciais do importador + sequencial/ano. Se digitar outro número, ele passa a ser manual (apague para voltar ao automático)."></div>
       <div><label>Fecha</label><input type="date" data-k="pf.fecha"></div>
       <div><label>Incoterm</label>
         <select data-k="pf.incoterm"><option>FOB</option><option>FCA</option><option>EXW</option><option>CFR</option><option>CIF</option><option>CPT</option><option>CIP</option><option>DAP</option><option>DDP</option></select></div>
@@ -741,14 +739,14 @@ const LS = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ toast("Não foi possível salvar no navegador (armazenamento cheio?)"); return false; } }
 };
-const CFG_PADRAO = {empresa:"KAPAZI INDÚSTRIA E COMÉRCIO DE CAPACHOS LTDA.",
+const CFG_PADRAO = window.CFG_EMPRESA || {empresa:"KAPAZI INDÚSTRIA E COMÉRCIO DE CAPACHOS LTDA.",
   direccion:"Rua das Amoreiras, 270 – Jardim Marize\nAlmirante Tamandaré – PR – Brasil",
   cnpj:"80.051.824/0001-20", contacto:"Cassiano Pajewski", emailtel:"cassiano.pajewski@kapazi.com.br",
   assinatura:"KAPAZI — Departamento de Exportación", traduzir:true,
   // dados para pagamento em USD (carta "DATOS PARA PAGOS" da Kapazi); saem na proforma e na invoice
   banco:""};
 let cfg = {...CFG_PADRAO};
-Object.entries(LS.get("pf_cfg", {})).forEach(([k,v]) => { if(v !== "" && v != null) cfg[k] = v; });  // vazio salvo não apaga o padrão
+if(!window.CFG_EMPRESA) Object.entries(LS.get("pf_cfg", {})).forEach(([k,v]) => { if(v !== "" && v != null) cfg[k] = v; });  // vazio salvo não apaga o padrão
 if(cfg.empresa === "KAPAZI INDÚSTRIA BRASILEIRA LTDA.") cfg.empresa = CFG_PADRAO.empresa;            // nome antigo do modelo
 if(cfg.direccion === "Rua das Amoreiras, 270 – Jardim Marize – Almirante Tamandaré – PR – Brasil") cfg.direccion = CFG_PADRAO.direccion;   // endereço antigo em uma linha
 if(cfg.emailtel === "www.kapazi.com.br") cfg.emailtel = CFG_PADRAO.emailtel;
@@ -929,7 +927,9 @@ function iniciais(nome){
   if(!ws.length) return "XX";
   return ws.length === 1 ? (ws[0] + "X").slice(0, 2) : ws[0][0] + ws[1][0];
 }
-const RE_NUM = /^KZ([A-Z0-9]{2})-(\d{3,})\/(\d{2})$/;
+// prefixo do exportador (cadastro da empresa); o gerador do PC usa "KZ"
+const PREFIXO = String(window.EMPRESA_PREFIXO == null ? "KZ" : window.EMPRESA_PREFIXO).toUpperCase().replace(/[^A-Z0-9]/g, "");
+const RE_NUM = new RegExp("^" + PREFIXO + "([A-Z0-9]{2})-(\\d{3,})\\/(\\d{2})$");
 let numerosPasta = [];
 const numerosUsados = () => [...LS.get("pf_numeros", []), ...Object.keys(LS.get("pf_salvas", {})), ...numerosPasta];
 function proximoSeq(){
@@ -937,7 +937,7 @@ function proximoSeq(){
   numerosUsados().forEach(n => { const m = String(n).match(RE_NUM); if(m && m[3] === a && n !== state.pf.numero) max = Math.max(max, +m[2]); });
   return max + 1;
 }
-const montarNumero = (nome, seq) => `KZ${iniciais(nome)}-${String(seq).padStart(3, "0")}/${ANO2()}`;
+const montarNumero = (nome, seq) => `${PREFIXO}${iniciais(nome)}-${String(seq).padStart(3, "0")}/${ANO2()}`;
 function atualizarNumeroAuto(){
   if(state.pf.numeroManual || state.pf.emitido) return;
   state.pf.numero = state.cliente.empresa ? montarNumero(state.cliente.empresa, proximoSeq()) : "";
@@ -1900,7 +1900,7 @@ const qtdFmt = q => Number.isInteger(Number(q)) ? "#,##0" : "#,##0.00";
    Faixa azul do título mais alta, com a logo afastada da borda e centralizada na altura;
    observações / dados bancários em quadros azul-claro lado a lado; aceite do cliente (proforma);
    linhas em branco na tabela de itens para o documento ocupar a folha inteira. */
-const AZUL_CLARO = "FFE3EDFA", AZUL_BORDA = "FF9DB6DA", FAIXA_ALT = 84, LOGO_W = 170, LOGO_H = 69;
+const AZUL_CLARO = "FFE3EDFA", AZUL_BORDA = "FF9DB6DA", FAIXA_ALT = 84, LOGO_PROP = window.LOGO_PROP || 170 / 69, LOGO_H = Math.round(Math.min(69, 260 / LOGO_PROP)), LOGO_W = Math.round(LOGO_H * LOGO_PROP);
 const pxCol = w => Math.trunc((w || 8.43) * 7 + 5);
 const altLinha = (ws, r) => ws.getRow(r).height || 15;
 function faixaXls(wb, ws, ncols){
@@ -3170,7 +3170,7 @@ function refletirClienteAberto(cod){
    Arquivos: Formacao de Preco\<nome>.json e Formacao de Preco <nome> <data>.xlsx.
    ===================================================================== */
 "use strict";
-const FP_VERSAO = 1, FP_EMPRESA = "KAPAZI";
+const FP_VERSAO = 1, FP_EMPRESA = window.CFG_EMPRESA ? String(window.CFG_EMPRESA.nome || window.CFG_EMPRESA.empresa || "").toUpperCase() : "KAPAZI";
 const FP_MODAL_NOME = {rod:"Rodoviário", mar:"Marítimo", aer:"Aéreo courier"};
 const FP_DESTINO_NOME = {latam:"América Latina e demais", eua:"Estados Unidos (DDP)"};
 const FP_BASE_NOME = {mi:"Preço do mercado interno", custo:"Custo de produção"};
@@ -3481,8 +3481,8 @@ function fpRender(){
       <div style="min-width:220px"><label>Incoterm da proposta</label><select data-fp="prop" data-estrutura="1">${et.map(e => `<option value="${e}">${esc(fpEtapaNome(e))}</option>`).join("")}</select></div>
       ${s.destino === "eua" ? `<div style="min-width:200px"><label>Local de entrega (DDP)</label>${fpInp("localEntrega")}</div>
         <div style="min-width:300px"><label>Importer of Record (IOR)</label><select data-fp="ior" data-estrutura="1">
-          <option value="kapazi">Kapazi como IOR não residente (bond, CBP Form 5106, customs broker)</option>
-          <option value="parceiro">Filial ou parceiro nos EUA como IOR (ex.: Kapazi Americas na NIC)</option></select></div>` : ""}
+          <option value="kapazi">Exportador como IOR não residente (bond, CBP Form 5106, customs broker)</option>
+          <option value="parceiro">Filial ou parceiro nos EUA como IOR (ex.: filial própria nos EUA)</option></select></div>` : ""}
     </div>
     <div class="hint">Etapas calculadas: <b>${et.map(e => esc(fpEtapaNome(e))).join(" → ")}</b>. A coluna do Incoterm da proposta fica destacada e é a que vai para a proforma e para a comparação com a tabela.</div>
     ${avisosModal}`;
@@ -3543,7 +3543,7 @@ function fpRenderCustos(){
       <td class="num" id="fpPctC${i}">${l.aplica ? (c.moeda === "PCT" ? fpPct(l.valor) + (c.id === "seguro" ? " s/ CIF+10%" : " s/ preço") : fpPct(l.pctEmb * 100)) : "0"}</td>
       <td><input value="${esc(c.parceiro || "")}" placeholder="Parceiro / cotação" style="width:190px" oninput="fpEditarCusto(${i},'parceiro',this.value)"></td></tr>`; }).join("");
   const eua = s.destino === "eua" && s.modal === "mar" ? `
-    <h3 style="font-size:13px;margin:16px 0 6px;color:var(--navy)">Custos nos EUA (entre CIF e DAP) · USD por embarque · IOR: ${s.ior === "parceiro" ? "filial/parceiro" : "Kapazi não residente"}</h3>
+    <h3 style="font-size:13px;margin:16px 0 6px;color:var(--navy)">Custos nos EUA (entre CIF e DAP) · USD por embarque · IOR: ${s.ior === "parceiro" ? "filial/parceiro" : "exportador não residente"}</h3>
     <div class="tbl-wrap"><table class="items"><thead><tr><th style="min-width:280px">Custo</th><th>Valor sugerido</th><th>Valor usado</th><th>% do embarque</th><th>Parceiro / cotação</th></tr></thead><tbody>
     ${ctx.linhasEUA.map((l, i) => { const c = l.c; return `<tr><td>${esc(c.nome)}</td><td class="num">${fmt(fpSugEUA(c, s))}</td>
       <td><input type="number" step="any" class="num" style="width:96px${c.usado != null && c.usado !== "" ? ";font-weight:700" : ""}" value="${c.usado != null && c.usado !== "" ? c.usado : fpSugEUA(c, s)}" oninput="fpEditarCustoEUA(${i},'usado',this.value)"></td>
@@ -4025,7 +4025,7 @@ async function fpGerarExcel(){
   // aba Tarifas EUA
   if(eua){
     const we = wb.addWorksheet("Tarifas EUA"); we.columns = [16, 46, 12, 10, 10, 16, 14, 12, 12, 14].map(w => ({width:w}));
-    parametros(we, [["Vigente desde", dataBR(tar.vigenteDesde)], ["Fonte", tar.fonte], ["Última conferência", dataBR(tar.conferido)], ["IOR", s.ior === "parceiro" ? "Filial / parceiro nos EUA" : "Kapazi como IOR não residente"], ["Local de entrega", s.localEntrega],
+    parametros(we, [["Vigente desde", dataBR(tar.vigenteDesde)], ["Fonte", tar.fonte], ["Última conferência", dataBR(tar.conferido)], ["IOR", s.ior === "parceiro" ? "Filial / parceiro nos EUA" : "Exportador como IOR não residente"], ["Local de entrega", s.localEntrega],
       ["Section 301 Brasil %", tar.s301], ["Section 301 FLIP %", tar.flip], ["MPF formal %", tar.mpfPct], ["MPF mínimo / máximo (USD)", `${tar.mpfMin} / ${tar.mpfMax}`], ["MPF informal (USD) / limite", `${tar.mpfInformal} / ${tar.limiteInformal}`], ["HMF % (só marítimo)", aer ? "não se aplica" : tar.hmf], ["Sales tax %", ctx.salesTax],
       ["Valor aduaneiro", `Sem frete e seguro internacionais (base ${aer ? "FCA" : "FOB"}). Tributos nunca sobre CIF ou DDP.`]]);
     fpEstiloCab(we.addRow(["Código", "Descrição", "HTS", "Tarifa total %", "Anexo I", "Valor a declarar (USD/UM)", "Tributos (USD)", "MPF (USD)", "HMF (USD)", "DDP (USD)"]));

@@ -13,3 +13,33 @@
 #ponteArquivos .pa-it:hover{background:#eeeff1}
 #ponteArquivos .pa-it small{color:#6b7080}
 #ponteArquivos #paFechar{border:1px solid #d9dbe2;background:#fff;color:#0A2540;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+.ponte-empresa{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border-radius:999px;padding:3px 10px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ponte-empresa.suporte{background:#FF6B00;color:#0A2540}
+/* telas da empresa (empresa.js) */
+.emp-dlg{width:min(760px,calc(100vw - 32px));max-height:88vh;padding:0;border:1px solid #d9dbe2;border-radius:10px;font:14px/1.4 "Segoe UI",Arial,sans-serif;color:#0A2540}
+.emp-dlg[open]{display:flex;flex-direction:column}
+.emp-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #d9dbe2}
+.emp-x{border:0;background:none;font-size:16px;cursor:pointer;color:#4A5D72}
+.emp-corpo{padding:4px 16px 12px;overflow:auto;flex:1}
+.emp-corpo h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#4A5D72;margin:18px 0 8px}
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.emp-grid .wide{grid-column:1/-1}
+.emp-grid label{display:block;font-size:12px;color:#4A5D72;margin-bottom:3px}
+.emp-grid input,.emp-grid select,.emp-grid textarea,.emp-tab input,.emp-tab select{width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #d9dbe2;border-radius:6px;font:inherit}
+.emp-grid input:disabled,.emp-grid textarea:disabled{background:#f4f6f8;color:#0A2540}
+.emp-check{display:flex!important;gap:8px;align-items:center;font-size:13px!important;color:#0A2540!important}
+.emp-check input{width:auto}
+.emp-hint{font-size:12px;color:#4A5D72;margin:8px 0}
+.emp-conta{border:1px solid #d9dbe2;border-radius:8px;padding:10px 12px;margin:0 0 10px}
+.emp-conta legend{font-size:12px;font-weight:700;padding:0 4px}
+.emp-acoes{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.emp-logo{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.emp-logo-box{background:#041243;border-radius:6px;height:84px;min-width:200px;display:flex;align-items:center;justify-content:center;padding:0 18px}
+.emp-logo-box img{max-height:58px;max-width:260px}
+.emp-logo-box img:not([src]),.emp-logo-box img[src=""]{display:none}
+.emp-rodape{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:10px 16px;border-top:1px solid #d9dbe2;flex-wrap:wrap}
+.emp-msg{flex:1;font-size:13px;color:#00875A}
+.emp-msg.erro{color:#b3261e}
+.emp-tab{width:100%;border-collapse:collapse;font-size:13px}
+.emp-tab th,.emp-tab td{border-bottom:1px solid #eef0f3;padding:6px;text-align:left;vertical-align:middle}
+.emp-tab th{font-size:12px;color:#4A5D72}
