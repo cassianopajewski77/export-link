@@ -55,6 +55,17 @@ O projeto Workers `export-link` está ligado a este repositório: a cada push no
 `npx wrangler deploy` na raiz, que lê o `wrangler.jsonc` (arquivos de `web/` + `worker/index.js`).
 Configuração no painel: Build command vazio · Deploy command `npx wrangler deploy` · Root directory `/`.
 
+## Endereço próprio: app.exportlink.com.br
+O sistema fica em **https://app.exportlink.com.br** (o endereço antigo `export-link.cassiano-pajewski.workers.dev`
+continua funcionando). O código não tem endereço fixo: login, confirmação de e-mail e Esqueci a senha usam o
+endereço em que a página foi aberta, então nada muda no código.
+- **Cloudflare** > Workers & Pages > `export-link` > Settings > Domains & Routes > Add > **Custom domain** >
+  `app.exportlink.com.br`. A Cloudflare cria o DNS e o certificado HTTPS sozinha (o domínio já está na conta).
+- **Supabase** > Authentication > URL Configuration: *Site URL* = `https://app.exportlink.com.br`;
+  *Redirect URLs*: `https://app.exportlink.com.br/**` e, durante a transição, `https://export-link.cassiano-pajewski.workers.dev/**`.
+- O site da empresa (repositório exportlink-site) tem o botão **Entrar** no menu e nas páginas do Export Link Docs
+  apontando para cá.
+
 ## Teste local (sem internet, com Supabase falso)
 ```
 SEMENTE=/tmp/semente.json LIBS=<pasta com exceljs/dist> node testes/teste_ponte.js
