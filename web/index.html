@@ -7,43 +7,132 @@
 <link rel="icon" href="logo/exportdocspro.ico">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
+<script src="sessao.js"></script>
+<script src="parceiros.js"></script>
 <style>
-:root{--navy:#0A2540;--laranja:#FF6B00;--laranja-esc:#E85F00;--line:#DDE3EA;--muted:#4A5D72;--bg:#F4F6F8}
+:root{--navy:#0A2540;--laranja:#FF6B00;--laranja-esc:#E85F00;--line:#DDE3EA;--muted:#4A5D72;--bg:#F4F6F8;--verde:#00875A;--verm:#b3261e}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font:15px/1.4 "Segoe UI",Arial,sans-serif;color:#0A2540;padding:16px}
-form{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:360px;box-shadow:0 6px 24px rgba(10,37,64,.08)}
+body{margin:0;min-height:100vh;background:#0A2540 radial-gradient(1200px 700px at 50% 35%,#16416d 0%,#0A2540 70%) fixed;font:15px/1.4 "Segoe UI",Arial,sans-serif;color:#0A2540;padding:24px 16px 88px}
+.tela{min-height:calc(100vh - 112px);max-width:1180px;margin:0 auto;display:grid;gap:24px;align-items:center;
+  grid-template-columns:minmax(0,1fr) 380px minmax(0,1fr);grid-template-areas:"esq login dir"}
+.lado{display:flex;flex-direction:column;gap:16px;min-width:0;align-self:center}
+.esq{grid-area:esq}.dir{grid-area:dir}
+form{grid-area:login;background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:380px;justify-self:center;box-shadow:0 14px 40px rgba(0,0,0,.35)}
 .logo{display:block;width:96px;margin:0 auto 10px}
 h1{font-size:18px;text-align:center;color:var(--navy);margin:0 0 20px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
-input{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit}
-button{width:100%;margin-top:20px;padding:11px;border:0;border-radius:8px;background:var(--laranja);color:var(--navy);font:inherit;font-weight:700;cursor:pointer}
-button:hover{background:var(--laranja-esc)}
-input:focus{outline:2px solid #9FD9C0;border-color:#00875A}
-button:disabled{opacity:.6}
-#msg{min-height:20px;margin-top:12px;font-size:13px;color:#b3261e;text-align:center}
-#msg.ok{color:#00875A}
+input{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+input[readonly]{background:#fff;cursor:text}
+#btn{width:100%;margin-top:20px;padding:11px;border:0;border-radius:8px;background:var(--laranja);color:var(--navy);font:inherit;font-weight:700;cursor:pointer}
+#btn:hover{background:var(--laranja-esc)}
+input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
+#btn:disabled{opacity:.6}
+#msg{min-height:20px;margin-top:12px;font-size:13px;color:var(--verm);text-align:center}
+#msg.ok{color:var(--verde)}
 .links{display:flex;justify-content:space-between;gap:8px;margin-top:14px;font-size:13px}
-.links a{color:#4A5D72;cursor:pointer;text-decoration:underline}
+.links a{color:var(--muted);cursor:pointer;text-decoration:underline}
 .links a[hidden]{display:none}
-.sub{font-size:13px;color:#4A5D72;text-align:center;margin:-12px 0 8px}
+.sub{font-size:13px;color:var(--muted);text-align:center;margin:-12px 0 8px}
+.seguro{display:flex;gap:6px;align-items:center;justify-content:center;margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
 [hidden]{display:none!important}
+/* cartões em volta do login */
+.card{background:#fff;border:1px solid rgba(255,255,255,.15);box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:12px;padding:16px 18px}
+.card h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.card h2 small{font-weight:400;text-transform:none;letter-spacing:0}
+.moeda{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:6px 0}
+.moeda+.moeda{border-top:1px dashed var(--line)}
+.moeda .nome{font-size:13px;color:var(--muted)}
+.moeda .nome b{display:block;color:var(--navy);font-size:14px}
+.moeda .val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.moeda .var{font-size:12px;font-weight:600;margin-left:6px}
+.var.sobe{color:var(--verde)}.var.desce{color:var(--verm)}
+.rodape{font-size:11px;color:#7a8a9c;margin-top:8px}
+.parc{position:relative;overflow:hidden;padding:0;border:0;min-height:150px}
+.parc a,.parc div.slide{display:flex;flex-direction:column;justify-content:flex-end;gap:4px;min-height:150px;padding:18px;color:#fff;text-decoration:none;border-radius:12px;background:var(--navy) center/cover no-repeat}
+.parc .slide[hidden]{display:none}
+.parc .tag{position:absolute;top:10px;right:12px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.parc b{font-size:16px}.parc span{font-size:13px;opacity:.9}
+.parc .img{background:#fff;color:var(--navy);border:1px solid var(--line)}
+.parc .img img{max-width:100%;max-height:90px;object-fit:contain;align-self:center;margin-bottom:auto}
+.pontos{position:absolute;bottom:10px;right:14px;display:flex;gap:5px}
+.pontos i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45)}
+.pontos i.on{background:#fff}
+.not ul{list-style:none;margin:0;padding:0}
+.not li+li{border-top:1px solid var(--line)}
+.not a{display:block;padding:9px 0;color:var(--navy);text-decoration:none;font-size:14px;line-height:1.35}
+.not a:hover b{text-decoration:underline}
+.not b{font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.not small{display:block;color:#7a8a9c;font-size:12px;margin-top:2px}
+.vazio{font-size:13px;color:#7a8a9c}
+@media (min-width:1061px){.not li:nth-child(n+5){display:none}}
+.ytv{position:relative;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:var(--navy)}
+.ytv iframe,.ytv button{position:absolute;inset:0;width:100%;height:100%;border:0}
+.ytv button{padding:0;cursor:pointer;background:#000 center/cover no-repeat}
+.ytv button::after{content:"";position:absolute;left:50%;top:50%;width:62px;height:44px;margin:-22px 0 0 -31px;border-radius:12px;background:rgba(255,0,0,.9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M8 5v14l11-7z'/%3E%3C/svg%3E") center/26px no-repeat}
+.ytv .breve{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;text-align:center;padding:12px;font-size:13px}
+.ytv .breve b{font-size:15px}
+#ytNav button{border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;padding:0 7px;font:inherit;color:var(--navy)}
+.yt .rodape a{color:var(--muted)}
+.zap{position:fixed;right:16px;bottom:16px;z-index:10;display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#073b1d;font-weight:700;font-size:14px;text-decoration:none;padding:11px 16px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.zap:hover{background:#1ebe5b}
+.zap svg{width:20px;height:20px;flex:none}
+@media (max-width:1060px){
+  .tela{grid-template-columns:1fr 1fr;grid-template-areas:"login login" "esq dir";align-items:start;min-height:0}
+  form{margin:24px 0 8px}
+}
+@media (max-width:680px){
+  body{padding:16px 16px 84px}
+  .tela{grid-template-columns:minmax(0,1fr);grid-template-areas:"login" "esq" "dir";gap:16px}
+  form{margin:0;padding:22px}
+  .zap span{display:none}.zap{padding:12px}
+}
 </style>
 </head>
 <body>
-<form id="f">
+<main class="tela">
+<form id="f" autocomplete="off" data-lpignore="true" data-1p-ignore>
   <img class="logo" src="logo/exportdocspro-256.png" alt="Export Docs Pro">
   <h1>Export Docs Pro</h1>
   <p class="sub" id="sub"></p>
   <div id="cEmail"><label for="email">E-mail</label>
-  <input id="email" type="email" autocomplete="username" required></div>
+  <input id="email" name="el_conta" type="email" autocomplete="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore required></div>
   <div id="cSenha"><label for="senha">Senha</label>
-  <input id="senha" type="password" autocomplete="current-password" required></div>
+  <input id="senha" name="el_chave" type="password" autocomplete="off" readonly data-lpignore="true" data-1p-ignore required></div>
   <div id="cSenha2" hidden><label for="senha2">Repita a senha</label>
-  <input id="senha2" type="password" autocomplete="new-password"></div>
+  <input id="senha2" name="el_chave2" type="password" autocomplete="off" readonly data-lpignore="true" data-1p-ignore></div>
   <button id="btn">Entrar</button>
   <div id="msg"></div>
   <div class="links"><a id="lPrimeiro">Primeiro acesso</a><a id="lEsqueci">Esqueci a senha</a><a id="lVoltar" hidden>Voltar para entrar</a></div>
+  <p class="seguro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="seguroTxt">Por segurança, sai sozinho após 20 min sem uso</span></p>
 </form>
+
+<aside class="lado esq">
+  <section class="card" id="cot" aria-live="polite">
+    <h2>Câmbio hoje <small id="cotHora"></small></h2>
+    <div class="moeda"><div class="nome"><b>Dólar</b>USD → R$</div><div><span class="val" id="usd">–</span><span class="var" id="usdVar"></span></div></div>
+    <div class="moeda" id="linhaEur"><div class="nome"><b>Euro</b>EUR → R$</div><div><span class="val" id="eur">–</span><span class="var" id="eurVar"></span></div></div>
+    <div class="rodape" id="cotFonte">Carregando…</div>
+  </section>
+  <section class="card yt" id="yt">
+    <h2>Export Link no YouTube <small id="ytNav"></small></h2>
+    <div class="ytv" id="ytVideo"></div>
+    <div class="rodape" id="ytRodape"></div>
+  </section>
+</aside>
+
+<aside class="lado dir">
+  <section class="card not" id="not">
+    <h2>Comércio exterior <small>notícias</small></h2>
+    <ul id="noticias"><li class="vazio">Carregando notícias…</li></ul>
+    <div class="rodape">Fonte: Google Notícias · abre em outra aba</div>
+  </section>
+  <section class="card parc" id="parc" aria-label="Parceiros Export Link"></section>
+</aside>
+</main>
+<a class="zap" id="zap" target="_blank" rel="noopener" hidden title="Falar com o suporte pelo WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.2-1.2-.2-.2-.4-.3z"/></svg>
+  <span>Suporte no WhatsApp</span>
+</a>
 <script>
 const sb = supabase.createClient(EXPORT_LINK_CFG.url, EXPORT_LINK_CFG.key);
 const $ = id => document.getElementById(id), voltaAqui = location.origin + location.pathname;
@@ -59,7 +148,7 @@ function mudar(m){
   modo = m; const c = MODOS[m];
   $("sub").textContent = c.sub; $("sub").hidden = !c.sub; $("btn").textContent = c.btn;
   $("cEmail").hidden = !c.email; $("email").required = c.email;
-  $("cSenha").hidden = !c.senha; $("senha").required = c.senha; $("senha").autocomplete = m === "entrar" ? "current-password" : "new-password";
+  $("cSenha").hidden = !c.senha; $("senha").required = c.senha;
   $("cSenha2").hidden = !c.senha2; $("senha2").required = c.senha2;
   $("lPrimeiro").hidden = m !== "entrar"; $("lEsqueci").hidden = m !== "entrar"; $("lVoltar").hidden = m === "entrar" || m === "nova";
   msg("");
@@ -69,10 +158,30 @@ $("lPrimeiro").onclick = () => mudar("primeiro");
 $("lEsqueci").onclick = () => mudar("esqueci");
 $("lVoltar").onclick = () => mudar("entrar");
 
+/* senha sempre digitada: os campos ficam "somente leitura" até a pessoa clicar neles, assim o
+   navegador não preenche sozinho a senha guardada; e são apagados ao sair da página ou voltar nela. */
+const campos = ["email", "senha", "senha2"].map($);
+campos.forEach(el => {
+  const liberar = () => el.removeAttribute("readonly");
+  el.addEventListener("focus", liberar); el.addEventListener("pointerdown", liberar);
+});
+const apagarCampos = () => campos.forEach(el => { el.value = ""; el.setAttribute("readonly", ""); });
+addEventListener("pageshow", apagarCampos);
+const SEG = window.SESSAO_SEG;
+$("seguroTxt").textContent = `Por segurança, sai sozinho após ${SEG.MINUTOS_SEM_USO} min sem uso`;
+const irParaSistema = () => { SEG.marcar(); apagarCampos(); location.replace("gerador.html"); };
+
+const saiu = new URLSearchParams(location.search).get("saiu");
+if(saiu){ history.replaceState(null, "", voltaAqui + location.hash); if(saiu === "inatividade") msg(`Você saiu automaticamente depois de ${SEG.MINUTOS_SEM_USO} minutos sem uso. Entre de novo.`, true); }
+
 const recuperando = /type=recovery/.test(location.hash);
 sb.auth.onAuthStateChange(ev => { if(ev === "PASSWORD_RECOVERY") mudar("nova"); });
 if(recuperando) mudar("nova");
-else sb.auth.getSession().then(({data}) => { if(data && data.session && modo === "entrar") location.replace("gerador.html"); });
+else sb.auth.getSession().then(({data}) => {
+  if(!(data && data.session) || modo !== "entrar") return;
+  if(SEG.vencida()){ SEG.limpar(); sb.auth.signOut(); }   // ficou parado demais: precisa entrar de novo
+  else location.replace("gerador.html");
+});
 
 $("f").addEventListener("submit", async ev => {
   ev.preventDefault();
@@ -84,12 +193,12 @@ $("f").addEventListener("submit", async ev => {
     if(modo === "entrar"){
       const {error} = await sb.auth.signInWithPassword({email, password: senha});
       if(error) throw new Error(/invalid/i.test(error.message) ? "E-mail ou senha incorretos." : /confirm/i.test(error.message) ? "Confirme o seu e-mail pelo link que enviamos antes de entrar." : "Não foi possível entrar: " + error.message);
-      location.replace("gerador.html"); return;
+      irParaSistema(); return;
     }
     if(modo === "primeiro"){
       const {data, error} = await sb.auth.signUp({email, password: senha, options: {emailRedirectTo: voltaAqui}});
       if(error) throw new Error(/registered|exists/i.test(error.message) ? "Este e-mail já tem senha. Use Entrar ou Esqueci a senha." : "Não foi possível criar a senha: " + error.message);
-      if(data && data.session){ location.replace("gerador.html"); return; }
+      if(data && data.session){ irParaSistema(); return; }
       mudar("entrar"); msg("Pronto! Enviamos um e-mail de confirmação para " + email + ". Clique no link do e-mail e depois entre aqui.", true);
     }
     if(modo === "esqueci"){
@@ -100,11 +209,109 @@ $("f").addEventListener("submit", async ev => {
     if(modo === "nova"){
       const {error} = await sb.auth.updateUser({password: senha});
       if(error) throw new Error("Não foi possível salvar a senha: " + error.message);
-      history.replaceState(null, "", voltaAqui); location.replace("gerador.html"); return;
+      history.replaceState(null, "", voltaAqui); irParaSistema(); return;
     }
-  }catch(e){ msg(e.message); }
+  }catch(e){ msg(e.message); $("senha").value = ""; $("senha2").value = ""; }
   btn.disabled = false;
 });
+</script>
+<script>
+/* ===== em volta do login: câmbio, parceiros, notícias e WhatsApp (configuração em parceiros.js) ===== */
+(function(){
+const C = window.TELA_ENTRADA || {}, $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const M = Object.assign({dolar:true, euro:true, noticias:true, whatsapp:true, parceiros:true, youtube:true}, C.mostrar || {});
+if(!M.euro){ $("linhaEur").hidden = true; $("cotHora").previousSibling.textContent = "Dólar hoje "; }
+if(!M.dolar && !M.euro) $("cot").hidden = true;
+if(!M.noticias) $("not").hidden = true;
+if(!M.youtube) $("yt").hidden = true;
+if(!M.whatsapp) C.whatsapp = "";
+if(!M.parceiros) C.parceiros = [];
+if(!M.dolar){ document.querySelector("#cot .moeda").hidden = true; }
+const urlOk = u => /^https:\/\//i.test(u || "") || /^parceiros\/[\w.\-]+$/.test(u || "");
+
+// WhatsApp
+if(C.whatsapp){
+  const z = $("zap"); z.hidden = false;
+  z.href = "https://wa.me/" + String(C.whatsapp).replace(/\D/g, "") + (C.whatsappMensagem ? "?text=" + encodeURIComponent(C.whatsappMensagem) : "");
+}
+
+// câmbio
+const real = v => v ? "R$ " + v.toLocaleString("pt-BR", {minimumFractionDigits:4, maximumFractionDigits:4}) : "–";
+function pintar(id, m){
+  $(id).textContent = real(m && m.venda);
+  const v = $(id + "Var"), p = m && m.variacao;
+  if(typeof p === "number" && isFinite(p)){ v.textContent = (p > 0 ? "▲ " : p < 0 ? "▼ " : "") + Math.abs(p).toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2}) + "%"; v.className = "var " + (p >= 0 ? "sobe" : "desce"); }
+  else { v.textContent = ""; }
+}
+async function cambio(){
+  try{
+    const r = await fetch("api/cotacao"); if(!r.ok) throw 0;
+    const d = await r.json(); if(!d.usd) throw 0;
+    pintar("usd", d.usd); pintar("eur", d.eur);
+    const h = d.usd.hora ? new Date(d.usd.hora) : null;
+    $("cotHora").textContent = h ? (h.toDateString() === new Date().toDateString() ? "às " + h.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"}) : h.toLocaleDateString("pt-BR")) : "";
+    $("cotFonte").textContent = "Valor de venda, comercial · fonte " + d.fonte;
+  }catch(e){ $("cotFonte").textContent = "Cotação indisponível no momento."; }
+}
+if(M.dolar || M.euro){ cambio(); setInterval(cambio, 5 * 60000); }
+
+// parceiros (revezam a cada 8 s)
+const P = (C.parceiros || []).filter(p => p && p.nome), box = $("parc");
+if(!P.length) box.hidden = true;
+else{
+  box.innerHTML = P.map((p, i) => {
+    const img = urlOk(p.imagem) ? `<img src="${esc(p.imagem)}" alt="">` : "";
+    const fundo = !img && /^#[0-9a-f]{3,8}$/i.test(p.cor || "") ? ` style="background:${p.cor}"` : "";
+    const corpo = `${img}<b>${esc(p.nome)}</b>${p.texto ? `<span>${esc(p.texto)}</span>` : ""}`;
+    const cls = `slide${img ? " img" : ""}`;
+    return urlOk(p.link) ? `<a class="${cls}" href="${esc(p.link)}" target="_blank" rel="noopener sponsored"${fundo}${i ? " hidden" : ""}>${corpo}</a>`
+                          : `<div class="${cls}"${fundo}${i ? " hidden" : ""}>${corpo}</div>`;
+  }).join("") + `<span class="tag">Parceiros</span>` + (P.length > 1 ? `<div class="pontos">${P.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : "");
+  if(P.length > 1){
+    let atual = 0, pausa = false;
+    box.addEventListener("mouseenter", () => pausa = true); box.addEventListener("mouseleave", () => pausa = false);
+    setInterval(() => {
+      if(pausa || document.hidden) return;
+      const sl = box.querySelectorAll(".slide"), pt = box.querySelectorAll(".pontos i");
+      sl[atual].hidden = true; pt[atual].className = ""; atual = (atual + 1) % sl.length; sl[atual].hidden = false; pt[atual].className = "on";
+    }, 8000);
+  }
+}
+
+// YouTube: miniatura leve; o vídeo só carrega quando a pessoa clica (sem cookies: youtube-nocookie)
+if(M.youtube) (function(){
+  const Y = C.youtube || {}, idDe = u => { const m = String(u || "").match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/) || String(u || "").match(/^([\w-]{11})$/); return m && m[1]; };
+  let ids = (Y.videos || []).map(idDe).filter(Boolean), i = 0;
+  const canal = urlOk(Y.canal) ? Y.canal : "", caixa = $("ytVideo");
+  $("ytRodape").innerHTML = canal ? `<a href="${esc(canal)}" target="_blank" rel="noopener">Ver o canal e inscrever-se</a>` : "";
+  const breve = () => { caixa.innerHTML = `<div class="breve"><b>Em breve</b>Vídeos sobre exportação e o Export Docs Pro.</div>`; };
+  const comecar = () => {
+    if(!ids.length) return breve();
+  const mostrar = () => {
+    caixa.innerHTML = `<button type="button" aria-label="Assistir ao vídeo" style="background-image:url('https://i.ytimg.com/vi/${ids[i]}/hqdefault.jpg')"></button>`;
+    caixa.firstChild.onclick = () => { caixa.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${ids[i]}?autoplay=1&rel=0" title="Vídeo Export Link" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`; };
+  };
+  if(ids.length > 1){
+    $("ytNav").innerHTML = `<button type="button" aria-label="Vídeo anterior">‹</button> <button type="button" aria-label="Próximo vídeo">›</button>`;
+    const [a, b] = $("ytNav").querySelectorAll("button");
+    a.onclick = () => { i = (i + ids.length - 1) % ids.length; mostrar(); }; b.onclick = () => { i = (i + 1) % ids.length; mostrar(); };
+  }
+  mostrar();
+  };
+  if(ids.length || !canal) return comecar();
+  fetch("api/youtube?canal=" + encodeURIComponent(canal)).then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => { ids = (d.videos || []).map(v => v.id).filter(v => /^[\w-]{11}$/.test(v)); comecar(); }).catch(breve);
+})();
+
+// notícias
+const quando = t => { const m = Math.round((Date.now() - t) / 60000); return !t ? "" : m < 60 ? `há ${Math.max(m, 1)} min` : m < 1440 ? `há ${Math.round(m / 60)} h` : new Date(t).toLocaleDateString("pt-BR"); };
+if(M.noticias) fetch("api/noticias?q=" + encodeURIComponent(C.noticias || "")).then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+  const it = (d.itens || []).filter(n => urlOk(n.link)).slice(0, 6);
+  $("noticias").innerHTML = it.length ? it.map(n => `<li><a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer"><b>${esc(n.titulo)}</b><small>${esc(n.fonte)}${n.fonte && n.data ? " · " : ""}${quando(n.data)}</small></a></li>`).join("")
+    : `<li class="vazio">Nenhuma notícia agora.</li>`;
+}).catch(() => { $("noticias").innerHTML = `<li class="vazio">Notícias indisponíveis no momento.</li>`; });
+})();
 </script>
 </body>
 </html>

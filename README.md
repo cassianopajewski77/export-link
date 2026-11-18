@@ -15,6 +15,12 @@ Banco, login e arquivos no **Supabase**; site no **Cloudflare Workers** (arquivo
   - espelha nas tabelas `documentos`, `clientes`, `produtos`, `arquivos` e `configuracoes` o que é gravado.
 - `worker/index.js` (Cloudflare Worker, configurado em `wrangler.jsonc`) serve a pasta `web/` e busca as fotos do site (SKUImagens) em `/api/foto`.
 - `web/index.html` é a tela de login (Entrar, Primeiro acesso, Esqueci a senha).
+  - Em volta do login: câmbio do dólar e do euro, parceiros (anúncios), notícias de comércio exterior, vídeos do
+    YouTube e botão de suporte no WhatsApp. **Tudo se edita em `web/parceiros.js`** (parceiros, número do WhatsApp,
+    canal do YouTube, assunto das notícias). Os dados vêm do Worker: `/api/cotacao`, `/api/noticias`, `/api/youtube`.
+  - Segurança: a senha não é preenchida automaticamente (campos ficam bloqueados até o clique e são apagados ao sair
+    da página) e `web/sessao.js` desconecta depois de 20 min sem uso (aviso 2 min antes, vale para todas as abas;
+    sessão parada há mais tempo que isso exige entrar de novo).
 - `web/empresa.js` tem as telas da empresa: Cadastro do exportador (botão **Exportador**), **Usuários** (administrador
   da empresa) e **Empresas** (administrador da plataforma Export Link).
 

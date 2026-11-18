@@ -12,7 +12,7 @@ for(const js of ["dados.js", "produtos_cadastrados.js", "clientes_cadastrados.js
 const exceljs = '<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>\n';
 trocar(exceljs, exceljs +
   '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>\n' +
-  '<script src="config.js"></script>\n<script src="ponte.js"></script>\n<script src="empresa.js"></script>\n<link rel="stylesheet" href="ponte.css">\n<link rel="icon" href="logo/exportdocspro.ico">\n', "exceljs");
+  '<script src="config.js"></script>\n<script src="sessao.js"></script>\n<script src="ponte.js"></script>\n<script src="empresa.js"></script>\n<link rel="stylesheet" href="ponte.css">\n<link rel="icon" href="logo/exportdocspro.ico">\n', "exceljs");
 // 3) os scripts do gerador só rodam depois que a ponte carregou os dados
 const n = (html.match(/^<script>$/gm) || []).length;
 if(n !== 3) throw new Error(`esperava 3 blocos <script>, achei ${n}`);

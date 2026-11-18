@@ -427,7 +427,7 @@ function barraUsuario(email){
   if(b("usu")) b("usu").onclick = () => window.EMPRESA_UI.usuarios();
   if(b("emp")) b("emp").onclick = () => window.EMPRESA_UI.empresas();
   if(b("mig")) b("mig").onclick = migrarArquivos;
-  b("sair").onclick = async () => { await sb.auth.signOut(); location.replace("index.html"); };
+  b("sair").onclick = async () => { if(window.SESSAO_SEG) SESSAO_SEG.limpar(); await sb.auth.signOut(); location.replace("index.html"); };
 }
 
 /* ---------- roda os scripts do gerador depois que os dados chegaram ---------- */
@@ -443,6 +443,8 @@ async function iniciar(){
   aviso("Conectando ao Export Link…");
   const {data:{session}} = await sb.auth.getSession();
   if(!session){ location.replace("index.html"); return; }
+  if(window.SESSAO_SEG && SESSAO_SEG.vencida()){ await SESSAO_SEG.sair(sb, "inatividade"); return; }   // muito tempo sem uso: entra de novo
+  if(window.SESSAO_SEG) SESSAO_SEG.vigiar(sb);
   const email = session.user && session.user.email || "";
   if(!(await carregarEmpresa())){
     aviso(`O e-mail <b>${escH(email)}</b> entrou, mas não está cadastrado em nenhuma empresa. Peça ao administrador da sua empresa para incluir este e-mail em <b>Usuários</b>. <button type="button" onclick="PONTE.sb.auth.signOut().then(()=>location.replace('index.html'))">Sair</button>`, true);
