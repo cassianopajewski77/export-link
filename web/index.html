@@ -20,6 +20,10 @@ body{margin:0;min-height:100vh;background:#0A2540 radial-gradient(1200px 700px a
 form{grid-area:login;background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:380px;justify-self:center;box-shadow:0 14px 40px rgba(0,0,0,.35)}
 .logo{display:block;width:96px;margin:0 auto 10px}
 h1{font-size:18px;text-align:center;color:var(--navy);margin:0 0 20px}
+.topo{margin:-28px -28px 18px;padding:22px 28px 16px;border-radius:11px 11px 0 0;border-bottom:4px solid var(--laranja);
+  background:radial-gradient(260px 140px at 50% 40%,rgba(61,155,255,.35),transparent 70%),linear-gradient(135deg,#123B66 0%,#1F5FA0 100%)}
+.topo .logo{filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.topo h1{color:#fff;margin:0;letter-spacing:.01em}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
 input{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
 input[readonly]{background:#fff;cursor:text}
@@ -106,6 +110,7 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
   body{padding:16px 16px 84px}
   .tela{grid-template-columns:minmax(0,1fr);grid-template-areas:"login" "esq" "dir";gap:16px}
   form{margin:0;padding:22px}
+  .topo{margin:-22px -22px 16px;padding:18px 22px 14px}
   .marca-link{max-width:240px}.marca{padding:8px 0 4px}
   .zap span{display:none}.zap{padding:12px}
 }
@@ -114,8 +119,10 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
 <body>
 <main class="tela">
 <form id="f" autocomplete="off" data-lpignore="true" data-1p-ignore>
-  <img class="logo" src="logo/exportdocspro-256.png" alt="Export Docs Pro">
-  <h1>Export Docs Pro</h1>
+  <div class="topo">
+    <img class="logo" src="logo/exportdocspro-256.png" alt="Export Docs Pro">
+    <h1>Export Docs Pro</h1>
+  </div>
   <p class="sub" id="sub"></p>
   <div id="cEmail"><label for="email">E-mail</label>
   <input id="email" name="el_conta" type="email" autocomplete="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore required></div>
