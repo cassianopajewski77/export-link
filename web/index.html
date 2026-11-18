@@ -12,12 +12,12 @@
 <style>
 :root{--navy:#0A2540;--laranja:#FF6B00;--laranja-esc:#E85F00;--line:#DDE3EA;--muted:#4A5D72;--bg:#F4F6F8;--verde:#00875A;--verm:#b3261e}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:var(--bg);font:15px/1.4 "Segoe UI",Arial,sans-serif;color:#0A2540;padding:24px 16px 88px}
+body{margin:0;min-height:100vh;background:#0A2540 radial-gradient(1200px 700px at 50% 35%,#16416d 0%,#0A2540 70%) fixed;font:15px/1.4 "Segoe UI",Arial,sans-serif;color:#0A2540;padding:24px 16px 88px}
 .tela{min-height:calc(100vh - 112px);max-width:1180px;margin:0 auto;display:grid;gap:24px;align-items:center;
   grid-template-columns:minmax(0,1fr) 380px minmax(0,1fr);grid-template-areas:"esq login dir"}
 .lado{display:flex;flex-direction:column;gap:16px;min-width:0;align-self:center}
 .esq{grid-area:esq}.dir{grid-area:dir}
-form{grid-area:login;background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:380px;justify-self:center;box-shadow:0 10px 32px rgba(10,37,64,.12)}
+form{grid-area:login;background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:380px;justify-self:center;box-shadow:0 14px 40px rgba(0,0,0,.35)}
 .logo{display:block;width:96px;margin:0 auto 10px}
 h1{font-size:18px;text-align:center;color:var(--navy);margin:0 0 20px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
@@ -36,7 +36,7 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
 .seguro{display:flex;gap:6px;align-items:center;justify-content:center;margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
 [hidden]{display:none!important}
 /* cartões em volta do login */
-.card{background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card{background:#fff;border:1px solid rgba(255,255,255,.15);box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:12px;padding:16px 18px}
 .card h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
 .card h2 small{font-weight:400;text-transform:none;letter-spacing:0}
 .moeda{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:6px 0}
