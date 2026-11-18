@@ -33,11 +33,12 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
 #btn:disabled{opacity:.6}
 #msg{min-height:20px;margin-top:12px;font-size:13px;color:var(--verm);text-align:center}
 #msg.ok{color:var(--verde)}
-.links{display:flex;justify-content:space-between;gap:8px;margin-top:14px;font-size:13px}
-.links a{color:var(--muted);cursor:pointer;text-decoration:underline}
+.links{display:flex;justify-content:space-between;gap:8px;margin:14px -28px -28px;padding:16px 28px;font-size:13px;border-radius:0 0 11px 11px;border-top:4px solid var(--laranja);
+  background:linear-gradient(135deg,#123B66 0%,#1F5FA0 100%)}
+.links a{color:#fff;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.links a:hover{color:#FFC48A}
 .links a[hidden]{display:none}
 .sub{font-size:13px;color:var(--muted);text-align:center;margin:-12px 0 8px}
-.seguro{display:flex;gap:6px;align-items:center;justify-content:center;margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
 [hidden]{display:none!important}
 /* cartões em volta do login */
 .card{background:#fff;border:1px solid rgba(255,255,255,.15);box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:12px;padding:16px 18px}
@@ -111,6 +112,7 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
   .tela{grid-template-columns:minmax(0,1fr);grid-template-areas:"login" "esq" "dir";gap:16px}
   form{margin:0;padding:22px}
   .topo{margin:-22px -22px 16px;padding:18px 22px 14px}
+  .links{margin:14px -22px -22px;padding:14px 22px}
   .marca-link{max-width:240px}.marca{padding:8px 0 4px}
   .zap span{display:none}.zap{padding:12px}
 }
@@ -133,7 +135,6 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
   <button id="btn">Entrar</button>
   <div id="msg"></div>
   <div class="links"><a id="lPrimeiro">Primeiro acesso</a><a id="lEsqueci">Esqueci a senha</a><a id="lVoltar" hidden>Voltar para entrar</a></div>
-  <p class="seguro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="seguroTxt">Por segurança, sai sozinho após 20 min sem uso</span></p>
 </form>
 
 <aside class="lado esq">
@@ -204,7 +205,6 @@ campos.forEach(el => {
 const apagarCampos = () => campos.forEach(el => { el.value = ""; el.setAttribute("readonly", ""); });
 addEventListener("pageshow", apagarCampos);
 const SEG = window.SESSAO_SEG;
-$("seguroTxt").textContent = `Por segurança, sai sozinho após ${SEG.MINUTOS_SEM_USO} min sem uso`;
 const irParaSistema = () => { SEG.marcar(); apagarCampos(); location.replace("gerador.html"); };
 
 const saiu = new URLSearchParams(location.search).get("saiu");
