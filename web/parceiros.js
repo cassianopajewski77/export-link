@@ -12,6 +12,16 @@
    Para tirar um parceiro, apague o bloco inteiro (do { até o },).
    ===================================================================== */
 window.TELA_ENTRADA = {
+  // O que aparece na tela (true = aparece, false = escondido)
+  mostrar: {
+    dolar: true,
+    euro: false,
+    noticias: true,
+    whatsapp: true,
+    parceiros: false,
+    youtube: false
+  },
+
   parceiros: [
     {
       nome: "Export Link Global Solutions",

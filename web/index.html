@@ -110,7 +110,7 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
   <section class="card" id="cot" aria-live="polite">
     <h2>Câmbio hoje <small id="cotHora"></small></h2>
     <div class="moeda"><div class="nome"><b>Dólar</b>USD → R$</div><div><span class="val" id="usd">–</span><span class="var" id="usdVar"></span></div></div>
-    <div class="moeda"><div class="nome"><b>Euro</b>EUR → R$</div><div><span class="val" id="eur">–</span><span class="var" id="eurVar"></span></div></div>
+    <div class="moeda" id="linhaEur"><div class="nome"><b>Euro</b>EUR → R$</div><div><span class="val" id="eur">–</span><span class="var" id="eurVar"></span></div></div>
     <div class="rodape" id="cotFonte">Carregando…</div>
   </section>
   <section class="card yt" id="yt">
@@ -121,7 +121,7 @@ input:focus{outline:2px solid #9FD9C0;border-color:var(--verde)}
 </aside>
 
 <aside class="lado dir">
-  <section class="card not">
+  <section class="card not" id="not">
     <h2>Comércio exterior <small>notícias</small></h2>
     <ul id="noticias"><li class="vazio">Carregando notícias…</li></ul>
     <div class="rodape">Fonte: Google Notícias · abre em outra aba</div>
@@ -220,6 +220,14 @@ $("f").addEventListener("submit", async ev => {
 (function(){
 const C = window.TELA_ENTRADA || {}, $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const M = Object.assign({dolar:true, euro:true, noticias:true, whatsapp:true, parceiros:true, youtube:true}, C.mostrar || {});
+if(!M.euro){ $("linhaEur").hidden = true; $("cotHora").previousSibling.textContent = "Dólar hoje "; }
+if(!M.dolar && !M.euro) $("cot").hidden = true;
+if(!M.noticias) $("not").hidden = true;
+if(!M.youtube) $("yt").hidden = true;
+if(!M.whatsapp) C.whatsapp = "";
+if(!M.parceiros) C.parceiros = [];
+if(!M.dolar){ document.querySelector("#cot .moeda").hidden = true; }
 const urlOk = u => /^https:\/\//i.test(u || "") || /^parceiros\/[\w.\-]+$/.test(u || "");
 
 // WhatsApp
@@ -246,7 +254,7 @@ async function cambio(){
     $("cotFonte").textContent = "Valor de venda, comercial · fonte " + d.fonte;
   }catch(e){ $("cotFonte").textContent = "Cotação indisponível no momento."; }
 }
-cambio(); setInterval(cambio, 5 * 60000);
+if(M.dolar || M.euro){ cambio(); setInterval(cambio, 5 * 60000); }
 
 // parceiros (revezam a cada 8 s)
 const P = (C.parceiros || []).filter(p => p && p.nome), box = $("parc");
@@ -272,7 +280,7 @@ else{
 }
 
 // YouTube: miniatura leve; o vídeo só carrega quando a pessoa clica (sem cookies: youtube-nocookie)
-(function(){
+if(M.youtube) (function(){
   const Y = C.youtube || {}, idDe = u => { const m = String(u || "").match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/) || String(u || "").match(/^([\w-]{11})$/); return m && m[1]; };
   let ids = (Y.videos || []).map(idDe).filter(Boolean), i = 0;
   const canal = urlOk(Y.canal) ? Y.canal : "", caixa = $("ytVideo");
@@ -298,7 +306,7 @@ else{
 
 // notícias
 const quando = t => { const m = Math.round((Date.now() - t) / 60000); return !t ? "" : m < 60 ? `há ${Math.max(m, 1)} min` : m < 1440 ? `há ${Math.round(m / 60)} h` : new Date(t).toLocaleDateString("pt-BR"); };
-fetch("api/noticias?q=" + encodeURIComponent(C.noticias || "")).then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+if(M.noticias) fetch("api/noticias?q=" + encodeURIComponent(C.noticias || "")).then(r => r.ok ? r.json() : Promise.reject()).then(d => {
   const it = (d.itens || []).filter(n => urlOk(n.link)).slice(0, 6);
   $("noticias").innerHTML = it.length ? it.map(n => `<li><a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer"><b>${esc(n.titulo)}</b><small>${esc(n.fonte)}${n.fonte && n.data ? " · " : ""}${quando(n.data)}</small></a></li>`).join("")
     : `<li class="vazio">Nenhuma notícia agora.</li>`;
