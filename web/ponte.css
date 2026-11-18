@@ -43,3 +43,12 @@
 .emp-tab{width:100%;border-collapse:collapse;font-size:13px}
 .emp-tab th,.emp-tab td{border-bottom:1px solid #eef0f3;padding:6px;text-align:left;vertical-align:middle}
 .emp-tab th{font-size:12px;color:#4A5D72}
+/* aviso de saída por falta de uso (sessao.js) */
+#sessaoAviso{position:fixed;inset:0;z-index:3000;background:rgba(10,37,64,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+#sessaoAviso .sa-box{background:#fff;border-radius:12px;padding:24px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);font:15px/1.45 "Segoe UI",Arial,sans-serif;color:#0A2540;text-align:center}
+#sessaoAviso h2{font-size:18px;margin:0 0 8px}
+#sessaoAviso p{margin:0 0 18px;color:#4A5D72}
+#sessaoAviso #saConta{color:#b3261e;font-variant-numeric:tabular-nums}
+#sessaoAviso .sa-bot{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#sessaoAviso button{border:1px solid #d9dbe2;background:#fff;color:#0A2540;border-radius:8px;padding:9px 16px;font:inherit;cursor:pointer}
+#sessaoAviso .sa-ok{background:#FF6B00;border-color:#FF6B00;font-weight:700}
